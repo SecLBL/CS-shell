@@ -81,9 +81,11 @@ Singleton {
     }
 
     function reloadHyprRules(): void {
-        const str = "keyword layerrule %1 %2, match:namespace caelestia-drawers";
-        const ignoreAlpha = transparency.enabled ? transparency.base - 0.03 : 0.03;
-        Hypr.extras.batchMessage([str.arg("blur").arg(blur.enabled ? 1 : 0), str.arg("ignore_alpha").arg(ignoreAlpha)]);
+        const ignoreAlpha = transparency.enabled ? (transparency.base - 0.03).toFixed(2) : "0.03";
+        Hypr.extras.batchMessage([
+            `eval hl.config({layerrule = {{'${blur.enabled ? "blur" : "noblur"}', 'caelestia-drawers'}}})`,
+            `eval hl.config({layerrule = {{'ignorealpha ${ignoreAlpha}', 'caelestia-drawers'}}})`
+        ]);
     }
 
     Component.onCompleted: debounceTimer.triggered()
