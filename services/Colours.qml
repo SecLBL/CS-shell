@@ -81,10 +81,8 @@ Singleton {
     }
 
     function reloadHyprRules(): void {
-        const ignoreAlpha = transparency.enabled ? (transparency.base - 0.03).toFixed(2) : "0.03";
         Hypr.extras.batchMessage([
-            `eval hl.config({layerrule = {{'${blur.enabled ? "blur" : "noblur"}', 'caelestia-drawers'}}})`,
-            `eval hl.config({layerrule = {{'ignorealpha ${ignoreAlpha}', 'caelestia-drawers'}}})`
+            `eval hl.layer_rule({ match={ namespace='caelestia-drawers' }, blur=${blur.enabled}, ignore_alpha=0.05 })`
         ]);
     }
 
