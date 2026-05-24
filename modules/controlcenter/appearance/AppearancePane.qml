@@ -34,6 +34,7 @@ Item {
     property bool transparencyEnabled: GlobalConfig.appearance.transparency.enabled ?? false
     property real transparencyBase: GlobalConfig.appearance.transparency.base ?? 0.85
     property real transparencyLayers: GlobalConfig.appearance.transparency.layers ?? 0.4
+    property bool blurEnabled: GlobalConfig.appearance.blur.enabled ?? false
     property real borderRounding: Config.border.rounding ?? 1
     property real borderThickness: Config.border.thickness ?? 1
 
@@ -69,6 +70,7 @@ Item {
         GlobalConfig.appearance.transparency.enabled = root.transparencyEnabled;
         GlobalConfig.appearance.transparency.base = root.transparencyBase;
         GlobalConfig.appearance.transparency.layers = root.transparencyLayers;
+        GlobalConfig.appearance.blur.enabled = root.blurEnabled;
 
         GlobalConfig.background.desktopClock.enabled = root.desktopClockEnabled;
         GlobalConfig.background.enabled = root.backgroundEnabled;

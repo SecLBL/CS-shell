@@ -95,6 +95,10 @@ const AppearanceTransparency* Tokens::transparency() const {
     return GlobalConfig::instance()->appearance()->transparency(); // Transparency is always global
 }
 
+const AppearanceBlur* Tokens::blur() const {
+    return GlobalConfig::instance()->appearance()->blur(); // Blur is always global
+}
+
 const SizeTokens* Tokens::sizes() const {
     if (m_tokens)
         return m_tokens->sizes();

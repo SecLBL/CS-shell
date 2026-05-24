@@ -15,8 +15,17 @@ CollapsibleSection {
 
     required property var rootPane
 
-    title: qsTr("Transparency")
+    title: qsTr("Transparency & Blur")
     showBackground: true
+
+    SwitchRow {
+        label: qsTr("Blur enabled")
+        checked: rootPane.blurEnabled
+        onToggled: checked => {
+            rootPane.blurEnabled = checked;
+            rootPane.saveConfig();
+        }
+    }
 
     SwitchRow {
         label: qsTr("Transparency enabled")

@@ -23,6 +23,7 @@ Singleton {
     readonly property M3Palette current: M3Palette {}
     readonly property M3Palette preview: M3Palette {}
     readonly property Transparency transparency: Transparency {}
+    readonly property Blur blur: Blur {}
     readonly property alias wallLuminance: analyser.luminance
 
     function getLuminance(c: color): real {
@@ -81,7 +82,8 @@ Singleton {
 
     function reloadHyprRules(): void {
         const str = "keyword layerrule %1 %2, match:namespace caelestia-drawers";
-        Hypr.extras.batchMessage([str.arg("blur").arg(transparency.enabled ? 1 : 0), str.arg("ignore_alpha").arg(transparency.base - 0.03)]);
+        const ignoreAlpha = transparency.enabled ? transparency.base - 0.03 : 0.03;
+        Hypr.extras.batchMessage([str.arg("blur").arg(blur.enabled ? 1 : 0), str.arg("ignore_alpha").arg(ignoreAlpha)]);
     }
 
     Component.onCompleted: debounceTimer.triggered()
@@ -121,6 +123,12 @@ Singleton {
 
         onEnabledChanged: debounceTimer.restart()
         onBaseChanged: debounceTimer.restart()
+    }
+
+    component Blur: QtObject {
+        readonly property bool enabled: Tokens.blur.enabled
+
+        onEnabledChanged: debounceTimer.restart()
     }
 
     component M3TPalette: QtObject {
