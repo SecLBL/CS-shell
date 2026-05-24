@@ -303,9 +303,16 @@ ColumnLayout {
                             anchors.top: renameAdapter.top
                         }
                         PropertyChanges {
-                            renameAdapter.implicitHeight: adapterNameEdit.implicitHeight
-                            renameLabel.opacity: 0
-                            adapterNameEdit.padding: Tokens.padding.normal
+                            target: renameAdapter
+                            implicitHeight: adapterNameEdit.implicitHeight
+                        }
+                        PropertyChanges {
+                            target: renameLabel
+                            opacity: 0
+                        }
+                        PropertyChanges {
+                            target: adapterNameEdit
+                            padding: Tokens.padding.normal
                         }
                     }
 

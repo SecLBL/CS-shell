@@ -180,9 +180,10 @@ Item {
             when: popout.shouldBeActive
 
             PropertyChanges {
-                popout.active: true
-                popout.opacity: 1
-                popout.scale: 1
+                target: popout
+                active: true
+                opacity: 1
+                scale: 1
             }
         }
 

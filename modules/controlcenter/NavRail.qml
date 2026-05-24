@@ -143,11 +143,21 @@ Item {
             when: root.session.navExpanded
 
             PropertyChanges {
-                expandedLabel.opacity: 1
-                smallLabel.opacity: 0
-                background.implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2 + expandedLabel.anchors.leftMargin + expandedLabel.implicitWidth
-                background.implicitHeight: icon.implicitHeight + root.Tokens.padding.normal * 2
-                item.implicitHeight: background.implicitHeight
+                target: expandedLabel
+                opacity: 1
+            }
+            PropertyChanges {
+                target: smallLabel
+                opacity: 0
+            }
+            PropertyChanges {
+                target: background
+                implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2 + expandedLabel.anchors.leftMargin + expandedLabel.implicitWidth
+                implicitHeight: icon.implicitHeight + root.Tokens.padding.normal * 2
+            }
+            PropertyChanges {
+                target: item
+                implicitHeight: background.implicitHeight
             }
         }
 

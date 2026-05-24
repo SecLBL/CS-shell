@@ -165,9 +165,16 @@ StyledFlickable {
                                                 anchors.top: renameDevice.top
                                             }
                                             PropertyChanges {
-                                                renameDevice.implicitHeight: deviceNameEdit.implicitHeight
-                                                renameLabel.opacity: 0
-                                                deviceNameEdit.padding: root.Tokens.padding.normal
+                                                target: renameDevice
+                                                implicitHeight: deviceNameEdit.implicitHeight
+                                            }
+                                            PropertyChanges {
+                                                target: renameLabel
+                                                opacity: 0
+                                            }
+                                            PropertyChanges {
+                                                target: deviceNameEdit
+                                                padding: root.Tokens.padding.normal
                                             }
                                         }
 
@@ -479,9 +486,13 @@ StyledFlickable {
                     when: root.session.bt.fabMenuOpen
 
                     PropertyChanges {
-                        fabMenuItem.implicitWidth: fabMenuItemInner.implicitWidth + root.Tokens.padding.large * 2
-                        fabMenuItem.opacity: 1
-                        fabMenuItemInner.opacity: 1
+                        target: fabMenuItem
+                        implicitWidth: fabMenuItemInner.implicitWidth + root.Tokens.padding.large * 2
+                        opacity: 1
+                    }
+                    PropertyChanges {
+                        target: fabMenuItemInner
+                        opacity: 1
                     }
                 }
 

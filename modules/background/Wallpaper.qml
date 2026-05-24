@@ -132,8 +132,9 @@ Item {
             when: root.current === img
 
             PropertyChanges {
-                img.opacity: 1
-                img.scale: 1
+                target: img
+                opacity: 1
+                scale: 1
             }
         }
 

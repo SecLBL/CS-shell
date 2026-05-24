@@ -170,8 +170,9 @@ Item {
             when: comp.shouldBeActive
 
             PropertyChanges {
-                comp.opacity: 1
-                comp.active: true
+                target: comp
+                opacity: 1
+                active: true
             }
         }
 
