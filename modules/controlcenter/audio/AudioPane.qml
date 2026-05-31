@@ -132,7 +132,7 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: qsTr("Routes MixBusChat to the selected device")
+                                text: qsTr("Routes processed chat audio to the selected device")
                                 color: Colours.palette.m3outline
                             }
 
