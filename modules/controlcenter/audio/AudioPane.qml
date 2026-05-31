@@ -893,6 +893,7 @@ Item {
 
                                 StyledSlider {
                                     Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
                                     from: -18; to: 18
                                     value: root.eqState.gain
 
@@ -1024,6 +1025,7 @@ Item {
 
                                 StyledSlider {
                                     Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
                                     from: -18; to: 18
                                     value: root.eqState.LSgain
                                     onMoved: root.setEqParam("LSgain", Math.round(value * 10) / 10)
@@ -1095,6 +1097,7 @@ Item {
 
                                 StyledSlider {
                                     Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
                                     from: -18; to: 18
                                     value: root.eqState.gain1
                                     onMoved: root.setEqParam("gain1", Math.round(value * 10) / 10)
@@ -1166,6 +1169,7 @@ Item {
 
                                 StyledSlider {
                                     Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
                                     from: -18; to: 18
                                     value: root.eqState.gain2
                                     onMoved: root.setEqParam("gain2", Math.round(value * 10) / 10)
@@ -1237,6 +1241,7 @@ Item {
 
                                 StyledSlider {
                                     Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
                                     from: -18; to: 18
                                     value: root.eqState.gain3
                                     onMoved: root.setEqParam("gain3", Math.round(value * 10) / 10)
@@ -1308,6 +1313,7 @@ Item {
 
                                 StyledSlider {
                                     Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
                                     from: -18; to: 18
                                     value: root.eqState.gain4
                                     onMoved: root.setEqParam("gain4", Math.round(value * 10) / 10)
@@ -1379,6 +1385,7 @@ Item {
 
                                 StyledSlider {
                                     Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
                                     from: -18; to: 18
                                     value: root.eqState.HSgain
                                     onMoved: root.setEqParam("HSgain", Math.round(value * 10) / 10)
