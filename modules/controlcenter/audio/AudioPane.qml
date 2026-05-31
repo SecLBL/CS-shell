@@ -750,13 +750,13 @@ Item {
                                             }
 
                                             Connections {
-                                                function onAudioChanged() {
-                                                    if (!streamVolumeInput.hasFocus && modelData?.audio) {
+                                                function onVolumeChanged() {
+                                                    if (!streamVolumeInput.hasFocus) {
                                                         streamVolumeInput.text = Math.round(modelData.audio.volume * 100).toString();
                                                     }
                                                 }
 
-                                                target: modelData
+                                                target: modelData.audio
                                             }
                                         }
 
@@ -805,13 +805,11 @@ Item {
                                         }
 
                                         Connections {
-                                            function onAudioChanged() {
-                                                if (modelData?.audio) {
-                                                    value = modelData.audio.volume;
-                                                }
+                                            function onVolumeChanged() {
+                                                value = modelData.audio.volume;
                                             }
 
-                                            target: modelData
+                                            target: modelData.audio
                                         }
                                     }
                                 }
