@@ -357,8 +357,8 @@ Item {
 
                                     StateLayer {
                                         onClicked: {
-                                            if (Audio.sink?.audio) {
-                                                Audio.sink.audio.muted = !Audio.sink.audio.muted;
+                                            if (Audio.generalChainOutNode?.audio) {
+                                                Audio.generalChainOutNode.audio.muted = !Audio.generalChainOutNode.audio.muted;
                                             }
                                         }
                                     }

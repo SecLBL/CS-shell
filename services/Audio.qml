@@ -25,6 +25,7 @@ Singleton {
     property PwNode chatOutputDevice: null
     property PwNode micInputDevice: null
 
+    property PwNode generalChainOutNode: null
     property PwNode chatChainOutNode: null
     property PwNode micChainOutNode: null
 
@@ -36,11 +37,13 @@ Singleton {
         "mic_chain_internal_in", "mic_chain_internal_out",
         "chat_chain_in", "chat_chain_out",
         "chat_chain_internal_in", "chat_chain_internal_out",
-        "mic-gate", "mic-nr", "mic-comp", "chat-nr", "chat-comp"
+        "general_chain_in", "general_chain_out",
+        "general_chain_internal_in", "general_chain_internal_out",
+        "mic-gate", "mic-nr", "mic-comp", "chat-nr", "chat-comp", "general-eq"
     ])
 
-    readonly property bool muted: !!sink?.audio?.muted
-    readonly property real volume: sink?.audio?.volume ?? 0
+    readonly property bool muted: !!generalChainOutNode?.audio?.muted
+    readonly property real volume: generalChainOutNode?.audio?.volume ?? 0
 
     readonly property bool sourceMuted: !!source?.audio?.muted
     readonly property real sourceVolume: source?.audio?.volume ?? 0
@@ -55,9 +58,9 @@ Singleton {
     readonly property alias beatTracker: beatTracker
 
     function setVolume(newVolume: real): void {
-        if (sink?.ready && sink?.audio) {
-            sink.audio.muted = false;
-            sink.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
+        if (generalChainOutNode?.ready && generalChainOutNode?.audio) {
+            generalChainOutNode.audio.muted = false;
+            generalChainOutNode.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
         }
     }
 
@@ -222,8 +225,9 @@ Singleton {
             const newStreams = [];
 
             for (const node of Pipewire.nodes.values) {
-                if (node.name === "chat_chain_out") root.chatChainOutNode = node;
-                if (node.name === "mic_chain_out")  root.micChainOutNode  = node;
+                if (node.name === "general_chain_out") root.generalChainOutNode = node;
+                if (node.name === "chat_chain_out")    root.chatChainOutNode    = node;
+                if (node.name === "mic_chain_out")     root.micChainOutNode     = node;
                 if (root.chromashellNodeNames.has(node.name))
                     continue;
                 if (!node.isStream) {
@@ -247,8 +251,9 @@ Singleton {
     PwObjectTracker {
         objects: [
             ...root.sinks, ...root.sources, ...root.streams,
-            ...(root.chatChainOutNode ? [root.chatChainOutNode] : []),
-            ...(root.micChainOutNode  ? [root.micChainOutNode]  : [])
+            ...(root.generalChainOutNode ? [root.generalChainOutNode] : []),
+            ...(root.chatChainOutNode    ? [root.chatChainOutNode]    : []),
+            ...(root.micChainOutNode     ? [root.micChainOutNode]     : [])
         ]
     }
 
