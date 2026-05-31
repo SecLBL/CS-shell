@@ -115,10 +115,45 @@ Item {
 
     Process { id: nrParamProc }
 
+    property var compState: ({
+        enabled: 1, cm: 0,
+        al: 0.25119, at: 20, rrl: 0, rt: 100, hold: 0,
+        cr: 4.0, kn: 0.50118, mk: 1.0,
+        g_in: 1.0, g_out: 1.0, cdw: 100,
+        sct: 0, scm: 1, sla: 0, scr: 10, scp: 1.0, scs: 0,
+        shpm: 0, shpf: 10, slpm: 0, slpf: 20000,
+        bth: 0.000251, bsa: 1.99526
+    })
+
+    function setCompParam(symbol: string, value: real): void {
+        compState = Object.assign({}, compState, { [symbol]: value });
+        compParamProc.command = [
+            "bash", "-c",
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"',
+            "0", "mic-comp", symbol, String(value)
+        ];
+        compParamProc.running = false;
+        compParamProc.running = true;
+    }
+
+    Process {
+        id: compLoadProc
+        command: ["bash", "-c",
+            'jq -c ".[\\"mic-comp\\"].params // {}" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/audio.json"']
+        stdout: SplitParser {
+            onRead: line => {
+                try { root.compState = Object.assign({}, root.compState, JSON.parse(line)); } catch(e) {}
+            }
+        }
+    }
+
+    Process { id: compParamProc }
+
     Component.onCompleted: {
         eqLoadProc.running = true;
         gateLoadProc.running = true;
         nrLoadProc.running = true;
+        compLoadProc.running = true;
     }
 
     SplitPaneLayout {
@@ -1805,6 +1840,921 @@ Item {
                             }
 
                             Item { Layout.fillWidth: true }
+                        }
+                    }
+
+                    SectionHeader {
+                        title: qsTr("Mic Compressor")
+                        description: qsTr("LSP Compressor Stereo — dynamics control for mic signal")
+                    }
+
+                    SectionContainer {
+                        contentSpacing: Tokens.spacing.small
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Tokens.spacing.small
+
+                            // ── Enable + Mode ────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledRect {
+                                    implicitWidth: implicitHeight
+                                    implicitHeight: compModeDownLabel.implicitHeight + Tokens.padding.small * 2
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.enabled ? Colours.palette.m3primary
+                                                                  : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "power_settings_new"
+                                        fill: root.compState.enabled ? 1 : 0
+                                        color: root.compState.enabled ? Colours.palette.m3onPrimary
+                                                                      : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer {
+                                        onClicked: root.setCompParam("enabled", root.compState.enabled ? 0 : 1)
+                                    }
+                                }
+
+                                StyledText { text: qsTr("Mode"); font.weight: 500 }
+
+                                Item { Layout.fillWidth: true }
+
+                                StyledRect {
+                                    implicitWidth: compModeDownLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compModeDownLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.cm === 0 ? Colours.palette.m3primary
+                                                                   : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compModeDownLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Down")
+                                        color: root.compState.cm === 0 ? Colours.palette.m3onPrimary
+                                                                       : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("cm", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compModeUpLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compModeUpLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.cm === 1 ? Colours.palette.m3primary
+                                                                   : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compModeUpLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Up")
+                                        color: root.compState.cm === 1 ? Colours.palette.m3onPrimary
+                                                                       : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("cm", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compModeBootLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compModeBootLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.cm === 2 ? Colours.palette.m3primary
+                                                                   : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compModeBootLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Boot")
+                                        color: root.compState.cm === 2 ? Colours.palette.m3onPrimary
+                                                                       : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("cm", 2) }
+                                }
+                            }
+
+                            // ── Threshold ────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Threshold"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -60; to: 0
+                                    value: root.linToDb(root.compState.al)
+                                    onMoved: root.setCompParam("al", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: root.linToDb(root.compState.al).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Attack ───────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Attack"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 2000
+                                    value: root.compState.at
+                                    onMoved: root.setCompParam("at", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.compState.at.toFixed(1) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Hold ─────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Hold"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 1000
+                                    value: root.compState.hold
+                                    onMoved: root.setCompParam("hold", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.compState.hold.toFixed(0) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Release ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Release"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 5000
+                                    value: root.compState.rt
+                                    onMoved: root.setCompParam("rt", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.compState.rt.toFixed(0) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Release threshold ─────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Rel. Thr."); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -60; to: 0
+                                    value: root.compState.rrl < 0.001 ? -60 : root.linToDb(root.compState.rrl)
+                                    onMoved: {
+                                        const db = Math.round(value * 10) / 10;
+                                        root.setCompParam("rrl", db <= -59.9 ? 0.0 : root.dbToLin(db));
+                                    }
+                                }
+
+                                StyledText {
+                                    text: root.compState.rrl < 0.001 ? qsTr("Auto")
+                                                                      : root.linToDb(root.compState.rrl).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Ratio ─────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Ratio"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 1; to: 100
+                                    value: root.compState.cr
+                                    onMoved: root.setCompParam("cr", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.compState.cr.toFixed(1) + ":1"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Knee ─────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Knee"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0.0631; to: 1.0
+                                    value: root.compState.kn
+                                    onMoved: root.setCompParam("kn", Math.round(value * 1000) / 1000)
+                                }
+
+                                StyledText {
+                                    text: root.compState.kn.toFixed(3)
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Makeup ───────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Makeup"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -40; to: 40
+                                    value: root.linToDb(root.compState.mk)
+                                    onMoved: root.setCompParam("mk", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.compState.mk) >= 0 ? "+" : "") + root.linToDb(root.compState.mk).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Input gain ───────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Input gain"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -20; to: 20
+                                    value: root.linToDb(root.compState.g_in)
+                                    onMoved: root.setCompParam("g_in", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.compState.g_in) >= 0 ? "+" : "") + root.linToDb(root.compState.g_in).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Output gain ──────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Output gain"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -20; to: 20
+                                    value: root.linToDb(root.compState.g_out)
+                                    onMoved: root.setCompParam("g_out", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.compState.g_out) >= 0 ? "+" : "") + root.linToDb(root.compState.g_out).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Dry/Wet ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Dry/Wet"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 100
+                                    value: root.compState.cdw
+                                    onMoved: root.setCompParam("cdw", Math.round(value))
+                                }
+
+                                StyledText {
+                                    text: root.compState.cdw.toFixed(0) + " %"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── SC Type ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Type"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: compSctFfwdLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compSctFfwdLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.sct === 0 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compSctFfwdLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Feed-fwd")
+                                        color: root.compState.sct === 0 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("sct", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compSctFbkLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compSctFbkLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.sct === 1 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compSctFbkLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Feed-bk")
+                                        color: root.compState.sct === 1 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("sct", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compSctLinkLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compSctLinkLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.sct === 2 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compSctLinkLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Link")
+                                        color: root.compState.sct === 2 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("sct", 2) }
+                                }
+
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── SC Mode ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Mode"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: compScmPeakLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScmPeakLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scm === 0 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScmPeakLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Peak")
+                                        color: root.compState.scm === 0 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scm", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compScmRmsLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScmRmsLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scm === 1 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScmRmsLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("RMS")
+                                        color: root.compState.scm === 1 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scm", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compScmLpfLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScmLpfLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scm === 2 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScmLpfLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("LPF")
+                                        color: root.compState.scm === 2 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scm", 2) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compScmSmaLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScmSmaLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scm === 3 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScmSmaLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("SMA")
+                                        color: root.compState.scm === 3 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scm", 3) }
+                                }
+
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── SC Source ────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Source"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: compScsMidLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScsMidLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scs === 0 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScsMidLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Mid")
+                                        color: root.compState.scs === 0 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scs", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compScsSideLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScsSideLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scs === 1 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScsSideLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Side")
+                                        color: root.compState.scs === 1 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scs", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compScsLLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScsLLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scs === 2 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScsLLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("L")
+                                        color: root.compState.scs === 2 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scs", 2) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compScsRLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScsRLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scs === 3 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScsRLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("R")
+                                        color: root.compState.scs === 3 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scs", 3) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compScsMinLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScsMinLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scs === 4 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScsMinLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Min")
+                                        color: root.compState.scs === 4 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scs", 4) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compScsMaxLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compScsMaxLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.scs === 5 ? Colours.palette.m3primary
+                                                                    : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compScsMaxLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Max")
+                                        color: root.compState.scs === 5 ? Colours.palette.m3onPrimary
+                                                                        : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("scs", 5) }
+                                }
+
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── SC Lookahead ─────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Lookahead"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 20
+                                    value: root.compState.sla
+                                    onMoved: root.setCompParam("sla", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.compState.sla.toFixed(1) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── SC Reactivity ────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Reactivity"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 250
+                                    value: root.compState.scr
+                                    onMoved: root.setCompParam("scr", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.compState.scr.toFixed(1) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── SC Preamp ────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Preamp"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -40; to: 40
+                                    value: root.linToDb(Math.max(root.compState.scp, 0.001))
+                                    onMoved: root.setCompParam("scp", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(Math.max(root.compState.scp, 0.001)) >= 0 ? "+" : "")
+                                          + root.linToDb(Math.max(root.compState.scp, 0.001)).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── SC HP filter ─────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC HP"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: compShpmOffLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compShpmOffLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.shpm === 0 ? Colours.palette.m3primary
+                                                                     : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compShpmOffLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("off")
+                                        color: root.compState.shpm === 0 ? Colours.palette.m3onPrimary
+                                                                         : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("shpm", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compShpm12Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compShpm12Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.shpm === 1 ? Colours.palette.m3primary
+                                                                     : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compShpm12Label
+                                        anchors.centerIn: parent
+                                        text: "12"
+                                        color: root.compState.shpm === 1 ? Colours.palette.m3onPrimary
+                                                                         : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("shpm", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compShpm24Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compShpm24Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.shpm === 2 ? Colours.palette.m3primary
+                                                                     : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compShpm24Label
+                                        anchors.centerIn: parent
+                                        text: "24"
+                                        color: root.compState.shpm === 2 ? Colours.palette.m3onPrimary
+                                                                         : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("shpm", 2) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compShpm36Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compShpm36Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.shpm === 3 ? Colours.palette.m3primary
+                                                                     : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compShpm36Label
+                                        anchors.centerIn: parent
+                                        text: "36"
+                                        color: root.compState.shpm === 3 ? Colours.palette.m3onPrimary
+                                                                         : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("shpm", 3) }
+                                }
+
+                                StyledInputField {
+                                    id: compShpfInput
+                                    implicitWidth: 65
+                                    text: Math.round(root.compState.shpf)
+                                    validator: IntValidator { bottom: 10; top: 20000 }
+                                    enabled: root.compState.shpm > 0
+
+                                    onEditingFinished: {
+                                        const v = parseInt(text);
+                                        if (!isNaN(v))
+                                            root.setCompParam("shpf", Math.max(10, Math.min(20000, v)));
+                                    }
+                                }
+
+                                StyledText { text: "Hz" }
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── SC LP filter ─────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC LP"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: compSlpmOffLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compSlpmOffLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.slpm === 0 ? Colours.palette.m3primary
+                                                                     : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compSlpmOffLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("off")
+                                        color: root.compState.slpm === 0 ? Colours.palette.m3onPrimary
+                                                                         : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("slpm", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compSlpm12Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compSlpm12Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.slpm === 1 ? Colours.palette.m3primary
+                                                                     : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compSlpm12Label
+                                        anchors.centerIn: parent
+                                        text: "12"
+                                        color: root.compState.slpm === 1 ? Colours.palette.m3onPrimary
+                                                                         : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("slpm", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compSlpm24Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compSlpm24Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.slpm === 2 ? Colours.palette.m3primary
+                                                                     : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compSlpm24Label
+                                        anchors.centerIn: parent
+                                        text: "24"
+                                        color: root.compState.slpm === 2 ? Colours.palette.m3onPrimary
+                                                                         : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("slpm", 2) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: compSlpm36Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: compSlpm36Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.compState.slpm === 3 ? Colours.palette.m3primary
+                                                                     : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: compSlpm36Label
+                                        anchors.centerIn: parent
+                                        text: "36"
+                                        color: root.compState.slpm === 3 ? Colours.palette.m3onPrimary
+                                                                         : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setCompParam("slpm", 3) }
+                                }
+
+                                StyledInputField {
+                                    id: compSlpfInput
+                                    implicitWidth: 65
+                                    text: Math.round(root.compState.slpf)
+                                    validator: IntValidator { bottom: 10; top: 20000 }
+                                    enabled: root.compState.slpm > 0
+
+                                    onEditingFinished: {
+                                        const v = parseInt(text);
+                                        if (!isNaN(v))
+                                            root.setCompParam("slpf", Math.max(10, Math.min(20000, v)));
+                                    }
+                                }
+
+                                StyledText { text: "Hz" }
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── Boot: Boost threshold ─────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+                                opacity: root.compState.cm === 2 ? 1.0 : 0.4
+
+                                StyledText { text: qsTr("Boost Thr."); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -120; to: -60
+                                    value: root.linToDb(root.compState.bth)
+                                    onMoved: root.setCompParam("bth", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: root.linToDb(root.compState.bth).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Boot: Boost amount ────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+                                opacity: root.compState.cm === 2 ? 1.0 : 0.4
+
+                                StyledText { text: qsTr("Boost Amt."); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -40; to: 40
+                                    value: root.linToDb(root.compState.bsa)
+                                    onMoved: root.setCompParam("bsa", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.compState.bsa) >= 0 ? "+" : "") + root.linToDb(root.compState.bsa).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
                         }
                     }
                 }
