@@ -88,9 +88,37 @@ Item {
 
     Process { id: gateParamProc }
 
+    property bool nrEnabled: true
+
+    function setNrEnabled(val: bool): void {
+        nrEnabled = val;
+        nrParamProc.command = [
+            "bash", "-c",
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"',
+            "0", "mic-nr", "enabled", val ? "1" : "0"
+        ];
+        nrParamProc.running = false;
+        nrParamProc.running = true;
+    }
+
+    Process {
+        id: nrLoadProc
+        command: ["bash", "-c",
+            'jq -r ".[\\"mic-nr\\"].params.enabled // 1" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/audio.json"']
+        stdout: SplitParser {
+            onRead: line => {
+                const v = parseInt(line.trim());
+                if (!isNaN(v)) root.nrEnabled = v !== 0;
+            }
+        }
+    }
+
+    Process { id: nrParamProc }
+
     Component.onCompleted: {
         eqLoadProc.running = true;
         gateLoadProc.running = true;
+        nrLoadProc.running = true;
     }
 
     SplitPaneLayout {
@@ -1736,6 +1764,47 @@ Item {
                                     horizontalAlignment: Text.AlignRight
                                 }
                             }
+                        }
+                    }
+
+                    SectionHeader {
+                        title: qsTr("Mic Noise Reduction")
+                        description: qsTr("RNNoise — neural network based voice noise suppression")
+                    }
+
+                    SectionContainer {
+                        contentSpacing: Tokens.spacing.small
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Tokens.spacing.normal
+
+                            StyledRect {
+                                implicitWidth: implicitHeight
+                                implicitHeight: nrLabel.implicitHeight + Tokens.padding.small * 2
+                                radius: Tokens.rounding.small
+                                color: root.nrEnabled ? Colours.palette.m3primary
+                                                      : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                MaterialIcon {
+                                    anchors.centerIn: parent
+                                    text: "done"
+                                    color: root.nrEnabled ? Colours.palette.m3onPrimary
+                                                          : Colours.palette.m3onSurface
+                                }
+
+                                StateLayer {
+                                    onClicked: root.setNrEnabled(!root.nrEnabled)
+                                }
+                            }
+
+                            StyledText {
+                                id: nrLabel
+                                text: root.nrEnabled ? qsTr("Enabled") : qsTr("Disabled")
+                                font.weight: 500
+                            }
+
+                            Item { Layout.fillWidth: true }
                         }
                     }
                 }
