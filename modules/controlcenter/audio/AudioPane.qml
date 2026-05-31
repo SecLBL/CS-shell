@@ -56,7 +56,42 @@ Item {
 
     Process { id: eqParamProc }
 
-    Component.onCompleted: eqLoadProc.running = true
+    function linToDb(v: real): real { return 20 * Math.log10(Math.max(v, 0.000001)); }
+    function dbToLin(db: real): real { return Math.pow(10, db / 20); }
+
+    property var gateState: ({
+        gt: 0.01, gz: 0.59566, gh: 0, ht: 0.25119, hz: 0.50119,
+        gr: 0.000251, mk: 1.41254, at: 2.92, rt: 100, hold: 171
+    })
+
+    function setGateParam(symbol: string, value: real): void {
+        gateState = Object.assign({}, gateState, { [symbol]: value });
+        gateParamProc.command = [
+            "bash", "-c",
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"',
+            "0", "mic-gate", symbol, String(value)
+        ];
+        gateParamProc.running = false;
+        gateParamProc.running = true;
+    }
+
+    Process {
+        id: gateLoadProc
+        command: ["bash", "-c",
+            'jq -c ".[\\"mic-gate\\"].params // {}" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/audio.json"']
+        stdout: SplitParser {
+            onRead: line => {
+                try { root.gateState = Object.assign({}, root.gateState, JSON.parse(line)); } catch(e) {}
+            }
+        }
+    }
+
+    Process { id: gateParamProc }
+
+    Component.onCompleted: {
+        eqLoadProc.running = true;
+        gateLoadProc.running = true;
+    }
 
     SplitPaneLayout {
         anchors.fill: parent
@@ -1453,6 +1488,253 @@ Item {
 
                                 StyledText { text: "Q" }
                                 Item { Layout.fillWidth: true }
+                            }
+                        }
+                    }
+
+                    SectionHeader {
+                        title: qsTr("Mic Gate")
+                        description: qsTr("LSP Gate Stereo — controls when the mic signal passes through")
+                    }
+
+                    SectionContainer {
+                        contentSpacing: Tokens.spacing.small
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Tokens.spacing.small
+
+                            // ── Threshold ────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Threshold"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -60; to: 0
+                                    value: root.linToDb(root.gateState.gt)
+                                    onMoved: root.setGateParam("gt", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: root.linToDb(root.gateState.gt).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Zone ─────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Zone"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0.001; to: 1.0
+                                    value: root.gateState.gz
+                                    onMoved: root.setGateParam("gz", Math.round(value * 1000) / 1000)
+                                }
+
+                                StyledText {
+                                    text: root.gateState.gz.toFixed(3)
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Attack ───────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Attack"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 2000
+                                    value: root.gateState.at
+                                    onMoved: root.setGateParam("at", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.gateState.at.toFixed(1) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Hold ─────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Hold"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 1000
+                                    value: root.gateState.hold
+                                    onMoved: root.setGateParam("hold", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.gateState.hold.toFixed(0) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Release ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Release"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 5000
+                                    value: root.gateState.rt
+                                    onMoved: root.setGateParam("rt", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.gateState.rt.toFixed(0) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Floor ────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Floor"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -80; to: 0
+                                    value: root.linToDb(root.gateState.gr)
+                                    onMoved: root.setGateParam("gr", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: root.linToDb(root.gateState.gr).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Makeup ───────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Makeup"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -20; to: 20
+                                    value: root.linToDb(root.gateState.mk)
+                                    onMoved: root.setGateParam("mk", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.gateState.mk) >= 0 ? "+" : "") + root.linToDb(root.gateState.mk).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Hysteresis toggle ────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledRect {
+                                    implicitWidth: implicitHeight
+                                    implicitHeight: hystLabel.implicitHeight + Tokens.padding.small * 2
+                                    radius: Tokens.rounding.small
+                                    color: root.gateState.gh ? Colours.palette.m3primary
+                                                             : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "done"
+                                        color: root.gateState.gh ? Colours.palette.m3onPrimary
+                                                                 : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer {
+                                        onClicked: root.setGateParam("gh", root.gateState.gh ? 0 : 1)
+                                    }
+                                }
+
+                                StyledText {
+                                    id: hystLabel
+                                    text: qsTr("Hysteresis")
+                                    font.weight: 500
+                                }
+
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── Hyst. Threshold ──────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+                                opacity: root.gateState.gh ? 1.0 : 0.4
+
+                                StyledText { text: qsTr("Hyst. Thr."); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -60; to: 0
+                                    value: root.linToDb(root.gateState.ht)
+                                    onMoved: root.setGateParam("ht", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: root.linToDb(root.gateState.ht).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Hyst. Zone ───────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+                                opacity: root.gateState.gh ? 1.0 : 0.4
+
+                                StyledText { text: qsTr("Hyst. Zone"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0.001; to: 1.0
+                                    value: root.gateState.hz
+                                    onMoved: root.setGateParam("hz", Math.round(value * 1000) / 1000)
+                                }
+
+                                StyledText {
+                                    text: root.gateState.hz.toFixed(3)
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
                             }
                         }
                     }
