@@ -56,30 +56,19 @@ Item {
                     }
 
                     CollapsibleSection {
-                        id: outputDevicesSection
+                        id: generalOutputSection
 
                         Layout.fillWidth: true
-                        title: qsTr("Output devices")
+                        title: qsTr("General output")
                         expanded: true
 
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: Tokens.spacing.small
 
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
-
-                                StyledText {
-                                    text: qsTr("Devices (%1)").arg(Audio.sinks.length)
-                                    font.pointSize: Tokens.font.size.normal
-                                    font.weight: 500
-                                }
-                            }
-
                             StyledText {
                                 Layout.fillWidth: true
-                                text: qsTr("All available output devices")
+                                text: qsTr("Routes MixBus to the selected device")
                                 color: Colours.palette.m3outline
                             }
 
@@ -92,18 +81,16 @@ Item {
 
                                     Layout.fillWidth: true
 
-                                    color: Audio.sink?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
+                                    color: Audio.generalOutputDevice?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                                     radius: Tokens.rounding.normal
-                                    implicitHeight: outputRowLayout.implicitHeight + Tokens.padding.normal * 2
+                                    implicitHeight: generalOutputRow.implicitHeight + Tokens.padding.normal * 2
 
                                     StateLayer {
-                                        onClicked: {
-                                            Audio.setAudioSink(modelData);
-                                        }
+                                        onClicked: Audio.setGeneralOutput(modelData)
                                     }
 
                                     RowLayout {
-                                        id: outputRowLayout
+                                        id: generalOutputRow
 
                                         anchors.left: parent.left
                                         anchors.right: parent.right
@@ -113,9 +100,9 @@ Item {
                                         spacing: Tokens.spacing.normal
 
                                         MaterialIcon {
-                                            text: Audio.sink?.id === modelData.id ? "speaker" : "speaker_group"
+                                            text: Audio.generalOutputDevice?.id === modelData.id ? "speaker" : "speaker_group"
                                             font.pointSize: Tokens.font.size.large
-                                            fill: Audio.sink?.id === modelData.id ? 1 : 0
+                                            fill: Audio.generalOutputDevice?.id === modelData.id ? 1 : 0
                                         }
 
                                         StyledText {
@@ -124,7 +111,7 @@ Item {
                                             maximumLineCount: 1
 
                                             text: modelData.description || qsTr("Unknown")
-                                            font.weight: Audio.sink?.id === modelData.id ? 500 : 400
+                                            font.weight: Audio.generalOutputDevice?.id === modelData.id ? 500 : 400
                                         }
                                     }
                                 }
@@ -133,30 +120,83 @@ Item {
                     }
 
                     CollapsibleSection {
-                        id: inputDevicesSection
+                        id: chatOutputSection
 
                         Layout.fillWidth: true
-                        title: qsTr("Input devices")
+                        title: qsTr("Chat output")
                         expanded: true
 
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: Tokens.spacing.small
 
-                            RowLayout {
+                            StyledText {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
+                                text: qsTr("Routes MixBusChat to the selected device")
+                                color: Colours.palette.m3outline
+                            }
 
-                                StyledText {
-                                    text: qsTr("Devices (%1)").arg(Audio.sources.length)
-                                    font.pointSize: Tokens.font.size.normal
-                                    font.weight: 500
+                            Repeater {
+                                Layout.fillWidth: true
+                                model: Audio.sinks
+
+                                delegate: StyledRect {
+                                    required property var modelData
+
+                                    Layout.fillWidth: true
+
+                                    color: Audio.chatOutputDevice?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
+                                    radius: Tokens.rounding.normal
+                                    implicitHeight: chatOutputRow.implicitHeight + Tokens.padding.normal * 2
+
+                                    StateLayer {
+                                        onClicked: Audio.setChatOutput(modelData)
+                                    }
+
+                                    RowLayout {
+                                        id: chatOutputRow
+
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.margins: Tokens.padding.normal
+
+                                        spacing: Tokens.spacing.normal
+
+                                        MaterialIcon {
+                                            text: Audio.chatOutputDevice?.id === modelData.id ? "headphones" : "headset"
+                                            font.pointSize: Tokens.font.size.large
+                                            fill: Audio.chatOutputDevice?.id === modelData.id ? 1 : 0
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                            maximumLineCount: 1
+
+                                            text: modelData.description || qsTr("Unknown")
+                                            font.weight: Audio.chatOutputDevice?.id === modelData.id ? 500 : 400
+                                        }
+                                    }
                                 }
                             }
+                        }
+                    }
+
+                    CollapsibleSection {
+                        id: micInputSection
+
+                        Layout.fillWidth: true
+                        title: qsTr("Mic input")
+                        expanded: true
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Tokens.spacing.small
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: qsTr("All available input devices")
+                                text: qsTr("Routes device into mic processing chain")
                                 color: Colours.palette.m3outline
                             }
 
@@ -169,18 +209,16 @@ Item {
 
                                     Layout.fillWidth: true
 
-                                    color: Audio.source?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
+                                    color: Audio.micInputDevice?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                                     radius: Tokens.rounding.normal
-                                    implicitHeight: inputRowLayout.implicitHeight + Tokens.padding.normal * 2
+                                    implicitHeight: micInputRow.implicitHeight + Tokens.padding.normal * 2
 
                                     StateLayer {
-                                        onClicked: {
-                                            Audio.setAudioSource(modelData);
-                                        }
+                                        onClicked: Audio.setMicInput(modelData)
                                     }
 
                                     RowLayout {
-                                        id: inputRowLayout
+                                        id: micInputRow
 
                                         anchors.left: parent.left
                                         anchors.right: parent.right
@@ -192,7 +230,7 @@ Item {
                                         MaterialIcon {
                                             text: "mic"
                                             font.pointSize: Tokens.font.size.large
-                                            fill: Audio.source?.id === modelData.id ? 1 : 0
+                                            fill: Audio.micInputDevice?.id === modelData.id ? 1 : 0
                                         }
 
                                         StyledText {
@@ -201,7 +239,7 @@ Item {
                                             maximumLineCount: 1
 
                                             text: modelData.description || qsTr("Unknown")
-                                            font.weight: Audio.source?.id === modelData.id ? 500 : 400
+                                            font.weight: Audio.micInputDevice?.id === modelData.id ? 500 : 400
                                         }
                                     }
                                 }

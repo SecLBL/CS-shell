@@ -18,11 +18,15 @@ Item {
     implicitHeight: layout.implicitHeight + Tokens.padding.normal * 2
 
     ButtonGroup {
-        id: sinks
+        id: generalSinks
     }
 
     ButtonGroup {
-        id: sources
+        id: chatSinks
+    }
+
+    ButtonGroup {
+        id: micSources
     }
 
     ColumnLayout {
@@ -33,7 +37,7 @@ Item {
         spacing: Tokens.spacing.normal
 
         StyledText {
-            text: qsTr("Output device")
+            text: qsTr("General output")
             font.weight: 500
         }
 
@@ -45,16 +49,35 @@ Item {
 
                 required property PwNode modelData
 
-                ButtonGroup.group: sinks
-                checked: Audio.sink?.id === modelData.id
-                onClicked: Audio.setAudioSink(modelData)
+                ButtonGroup.group: generalSinks
+                checked: Audio.generalOutputDevice?.id === modelData.id
+                onClicked: Audio.setGeneralOutput(modelData)
                 text: modelData.description
             }
         }
 
         StyledText {
             Layout.topMargin: Tokens.spacing.smaller
-            text: qsTr("Input device")
+            text: qsTr("Chat output")
+            font.weight: 500
+        }
+
+        Repeater {
+            model: Audio.sinks
+
+            StyledRadioButton {
+                required property PwNode modelData
+
+                ButtonGroup.group: chatSinks
+                checked: Audio.chatOutputDevice?.id === modelData.id
+                onClicked: Audio.setChatOutput(modelData)
+                text: modelData.description
+            }
+        }
+
+        StyledText {
+            Layout.topMargin: Tokens.spacing.smaller
+            text: qsTr("Mic input")
             font.weight: 500
         }
 
@@ -64,9 +87,9 @@ Item {
             StyledRadioButton {
                 required property PwNode modelData
 
-                ButtonGroup.group: sources
-                checked: Audio.source?.id === modelData.id
-                onClicked: Audio.setAudioSource(modelData)
+                ButtonGroup.group: micSources
+                checked: Audio.micInputDevice?.id === modelData.id
+                onClicked: Audio.setMicInput(modelData)
                 text: modelData.description
             }
         }

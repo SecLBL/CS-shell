@@ -21,6 +21,21 @@ Singleton {
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property PwNode source: Pipewire.defaultAudioSource
 
+    property PwNode generalOutputDevice: null
+    property PwNode chatOutputDevice: null
+    property PwNode micInputDevice: null
+
+    readonly property var chromashellNodeNames: new Set([
+        "MixBus.input", "MixBus.output",
+        "MixBusChat.input", "MixBusChat.output",
+        "VirtualCable.input", "VirtualCable.output",
+        "mic_chain_in", "mic_chain_out",
+        "mic_chain_internal_in", "mic_chain_internal_out",
+        "chat_chain_in", "chat_chain_out",
+        "chat_chain_internal_in", "chat_chain_internal_out",
+        "mic-gate", "mic-nr", "mic-comp", "chat-nr", "chat-comp"
+    ])
+
     readonly property bool muted: !!sink?.audio?.muted
     readonly property real volume: sink?.audio?.volume ?? 0
 
@@ -68,13 +83,40 @@ Singleton {
         Pipewire.preferredDefaultAudioSource = newSource;
     }
 
+    function _runRoute(bus: string, deviceName: string, oldName: string): void {
+        audioRouteProc.command = [
+            "bash", "-c",
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-route.sh" "$@"',
+            "0", bus, deviceName, oldName
+        ];
+        audioRouteProc.running = false;
+        audioRouteProc.running = true;
+    }
+
+    function setGeneralOutput(device: PwNode): void {
+        const old = generalOutputDevice?.name ?? "";
+        generalOutputDevice = device;
+        _runRoute("general", device.name, old);
+    }
+
+    function setChatOutput(device: PwNode): void {
+        const old = chatOutputDevice?.name ?? "";
+        chatOutputDevice = device;
+        _runRoute("chat", device.name, old);
+    }
+
+    function setMicInput(device: PwNode): void {
+        const old = micInputDevice?.name ?? "";
+        micInputDevice = device;
+        _runRoute("mic", device.name, old);
+    }
+
     function cycleNextAudioOutput(): void {
         if (sinks.length === 0)
             return;
 
-        const currentIndex = sinks.findIndex(s => s === sink);
-        const nextIndex = (currentIndex + 1) % sinks.length;
-        setAudioSink(sinks[nextIndex]);
+        const cur = sinks.findIndex(s => s === generalOutputDevice);
+        setGeneralOutput(sinks[(cur + 1) % sinks.length]);
     }
 
     function setStreamVolume(stream: PwNode, newVolume: real): void {
@@ -141,6 +183,8 @@ Singleton {
             const newStreams = [];
 
             for (const node of Pipewire.nodes.values) {
+                if (root.chromashellNodeNames.has(node.name))
+                    continue;
                 if (!node.isStream) {
                     if (node.isSink)
                         newSinks.push(node);
@@ -161,6 +205,10 @@ Singleton {
 
     PwObjectTracker {
         objects: [...root.sinks, ...root.sources, ...root.streams]
+    }
+
+    Process {
+        id: audioRouteProc
     }
 
     CavaProvider {
