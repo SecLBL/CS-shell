@@ -25,6 +25,9 @@ Singleton {
     property PwNode chatOutputDevice: null
     property PwNode micInputDevice: null
 
+    property PwNode chatChainOutNode: null
+    property PwNode micChainOutNode: null
+
     readonly property var chromashellNodeNames: new Set([
         "MixBus.input", "MixBus.output",
         "MixBusChat.input", "MixBusChat.output",
@@ -42,6 +45,12 @@ Singleton {
     readonly property bool sourceMuted: !!source?.audio?.muted
     readonly property real sourceVolume: source?.audio?.volume ?? 0
 
+    readonly property bool chatMuted: !!chatChainOutNode?.audio?.muted
+    readonly property real chatVolume: chatChainOutNode?.audio?.volume ?? 0
+
+    readonly property bool micMuted: !!micChainOutNode?.audio?.muted
+    readonly property real micVolume: micChainOutNode?.audio?.volume ?? 0
+
     readonly property alias cava: cava
     readonly property alias beatTracker: beatTracker
 
@@ -58,6 +67,36 @@ Singleton {
 
     function decrementVolume(amount: real): void {
         setVolume(volume - (amount || GlobalConfig.services.audioIncrement));
+    }
+
+    function setChatVolume(newVolume: real): void {
+        if (chatChainOutNode?.ready && chatChainOutNode?.audio) {
+            chatChainOutNode.audio.muted = false;
+            chatChainOutNode.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
+        }
+    }
+
+    function incrementChatVolume(amount: real): void {
+        setChatVolume(chatVolume + (amount || GlobalConfig.services.audioIncrement));
+    }
+
+    function decrementChatVolume(amount: real): void {
+        setChatVolume(chatVolume - (amount || GlobalConfig.services.audioIncrement));
+    }
+
+    function setMicVolume(newVolume: real): void {
+        if (micChainOutNode?.ready && micChainOutNode?.audio) {
+            micChainOutNode.audio.muted = false;
+            micChainOutNode.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
+        }
+    }
+
+    function incrementMicVolume(amount: real): void {
+        setMicVolume(micVolume + (amount || GlobalConfig.services.audioIncrement));
+    }
+
+    function decrementMicVolume(amount: real): void {
+        setMicVolume(micVolume - (amount || GlobalConfig.services.audioIncrement));
     }
 
     function setSourceVolume(newVolume: real): void {
@@ -183,6 +222,8 @@ Singleton {
             const newStreams = [];
 
             for (const node of Pipewire.nodes.values) {
+                if (node.name === "chat_chain_out") root.chatChainOutNode = node;
+                if (node.name === "mic_chain_out")  root.micChainOutNode  = node;
                 if (root.chromashellNodeNames.has(node.name))
                     continue;
                 if (!node.isStream) {
@@ -204,7 +245,11 @@ Singleton {
     }
 
     PwObjectTracker {
-        objects: [...root.sinks, ...root.sources, ...root.streams]
+        objects: [
+            ...root.sinks, ...root.sources, ...root.streams,
+            ...(root.chatChainOutNode ? [root.chatChainOutNode] : []),
+            ...(root.micChainOutNode  ? [root.micChainOutNode]  : [])
+        ]
     }
 
     Process {

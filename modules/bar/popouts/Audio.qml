@@ -56,6 +56,31 @@ Item {
             }
         }
 
+        CustomMouseArea {
+            Layout.fillWidth: true
+            implicitHeight: Tokens.padding.normal * 3
+
+            onWheel: event => {
+                if (event.angleDelta.y > 0)
+                    Audio.incrementVolume();
+                else if (event.angleDelta.y < 0)
+                    Audio.decrementVolume();
+            }
+
+            StyledSlider {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                implicitHeight: parent.implicitHeight
+
+                value: Audio.volume
+                onMoved: Audio.setVolume(value)
+
+                Behavior on value {
+                    Anim {}
+                }
+            }
+        }
+
         StyledText {
             Layout.topMargin: Tokens.spacing.smaller
             text: qsTr("Chat output")
@@ -72,6 +97,31 @@ Item {
                 checked: Audio.chatOutputDevice?.id === modelData.id
                 onClicked: Audio.setChatOutput(modelData)
                 text: modelData.description
+            }
+        }
+
+        CustomMouseArea {
+            Layout.fillWidth: true
+            implicitHeight: Tokens.padding.normal * 3
+
+            onWheel: event => {
+                if (event.angleDelta.y > 0)
+                    Audio.incrementChatVolume();
+                else if (event.angleDelta.y < 0)
+                    Audio.decrementChatVolume();
+            }
+
+            StyledSlider {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                implicitHeight: parent.implicitHeight
+
+                value: Audio.chatVolume
+                onMoved: Audio.setChatVolume(value)
+
+                Behavior on value {
+                    Anim {}
+                }
             }
         }
 
@@ -94,22 +144,15 @@ Item {
             }
         }
 
-        StyledText {
-            Layout.topMargin: Tokens.spacing.smaller
-            Layout.bottomMargin: -Tokens.spacing.small / 2
-            text: qsTr("Volume (%1)").arg(Audio.muted ? qsTr("Muted") : `${Math.round(Audio.volume * 100)}%`)
-            font.weight: 500
-        }
-
         CustomMouseArea {
             Layout.fillWidth: true
             implicitHeight: Tokens.padding.normal * 3
 
             onWheel: event => {
                 if (event.angleDelta.y > 0)
-                    Audio.incrementVolume();
+                    Audio.incrementMicVolume();
                 else if (event.angleDelta.y < 0)
-                    Audio.decrementVolume();
+                    Audio.decrementMicVolume();
             }
 
             StyledSlider {
@@ -117,8 +160,8 @@ Item {
                 anchors.right: parent.right
                 implicitHeight: parent.implicitHeight
 
-                value: Audio.volume
-                onMoved: Audio.setVolume(value)
+                value: Audio.micVolume
+                onMoved: Audio.setMicVolume(value)
 
                 Behavior on value {
                     Anim {}

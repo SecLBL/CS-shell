@@ -275,8 +275,8 @@ Item {
                     }
 
                     SectionHeader {
-                        title: qsTr("Output volume")
-                        description: qsTr("Control the volume of your output device")
+                        title: qsTr("General output volume")
+                        description: qsTr("MixBus — all apps routing to the main output")
                     }
 
                     SectionContainer {
@@ -350,7 +350,7 @@ Item {
 
                                 StyledRect {
                                     implicitWidth: implicitHeight
-                                    implicitHeight: muteIcon.implicitHeight + Tokens.padding.normal * 2
+                                    implicitHeight: muteGeneralIcon.implicitHeight + Tokens.padding.normal * 2
 
                                     radius: Tokens.rounding.normal
                                     color: Audio.muted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
@@ -364,7 +364,7 @@ Item {
                                     }
 
                                     MaterialIcon {
-                                        id: muteIcon
+                                        id: muteGeneralIcon
 
                                         anchors.centerIn: parent
                                         text: Audio.muted ? "volume_off" : "volume_up"
@@ -374,8 +374,6 @@ Item {
                             }
 
                             StyledSlider {
-                                id: outputVolumeSlider
-
                                 Layout.fillWidth: true
                                 implicitHeight: Tokens.padding.normal * 3
 
@@ -393,8 +391,8 @@ Item {
                     }
 
                     SectionHeader {
-                        title: qsTr("Input volume")
-                        description: qsTr("Control the volume of your input device")
+                        title: qsTr("Chat output volume")
+                        description: qsTr("chat_chain_out — after noise reduction and compression")
                     }
 
                     SectionContainer {
@@ -419,24 +417,24 @@ Item {
                                 }
 
                                 StyledInputField {
-                                    id: inputVolumeInput
+                                    id: chatVolumeInput
 
                                     Layout.preferredWidth: 70
                                     validator: IntValidator {
                                         bottom: 0
                                         top: 100
                                     }
-                                    enabled: !Audio.sourceMuted
+                                    enabled: !Audio.chatMuted
 
                                     Component.onCompleted: {
-                                        text = Math.round(Audio.sourceVolume * 100).toString();
+                                        text = Math.round(Audio.chatVolume * 100).toString();
                                     }
 
                                     onTextEdited: text => {
                                         if (hasFocus) {
                                             const val = parseInt(text);
                                             if (!isNaN(val) && val >= 0 && val <= 100) {
-                                                Audio.setSourceVolume(val / 100);
+                                                Audio.setChatVolume(val / 100);
                                             }
                                         }
                                     }
@@ -444,14 +442,14 @@ Item {
                                     onEditingFinished: {
                                         const val = parseInt(text);
                                         if (isNaN(val) || val < 0 || val > 100) {
-                                            text = Math.round(Audio.sourceVolume * 100).toString();
+                                            text = Math.round(Audio.chatVolume * 100).toString();
                                         }
                                     }
 
                                     Connections {
-                                        function onSourceVolumeChanged() {
-                                            if (!inputVolumeInput.hasFocus) {
-                                                inputVolumeInput.text = Math.round(Audio.sourceVolume * 100).toString();
+                                        function onChatVolumeChanged() {
+                                            if (!chatVolumeInput.hasFocus) {
+                                                chatVolumeInput.text = Math.round(Audio.chatVolume * 100).toString();
                                             }
                                         }
 
@@ -463,48 +461,178 @@ Item {
                                     text: "%"
                                     color: Colours.palette.m3outline
                                     font.pointSize: Tokens.font.size.normal
-                                    opacity: Audio.sourceMuted ? 0.5 : 1
+                                    opacity: Audio.chatMuted ? 0.5 : 1
                                 }
 
                                 StyledRect {
                                     implicitWidth: implicitHeight
-                                    implicitHeight: muteInputIcon.implicitHeight + Tokens.padding.normal * 2
+                                    implicitHeight: muteChatIcon.implicitHeight + Tokens.padding.normal * 2
 
                                     radius: Tokens.rounding.normal
-                                    color: Audio.sourceMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+                                    color: Audio.chatMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                                     StateLayer {
                                         onClicked: {
-                                            if (Audio.source?.audio) {
-                                                Audio.source.audio.muted = !Audio.source.audio.muted;
+                                            if (Audio.chatChainOutNode?.audio) {
+                                                Audio.chatChainOutNode.audio.muted = !Audio.chatChainOutNode.audio.muted;
                                             }
                                         }
                                     }
 
                                     MaterialIcon {
-                                        id: muteInputIcon
+                                        id: muteChatIcon
 
                                         anchors.centerIn: parent
-                                        text: "mic_off"
-                                        color: Audio.sourceMuted ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                                        text: Audio.chatMuted ? "volume_off" : "headphones"
+                                        color: Audio.chatMuted ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
                                     }
                                 }
                             }
 
                             StyledSlider {
-                                id: inputVolumeSlider
-
                                 Layout.fillWidth: true
                                 implicitHeight: Tokens.padding.normal * 3
 
-                                value: Audio.sourceVolume
-                                enabled: !Audio.sourceMuted
+                                value: Audio.chatVolume
+                                enabled: !Audio.chatMuted
                                 opacity: enabled ? 1 : 0.5
                                 onMoved: {
-                                    Audio.setSourceVolume(value);
-                                    if (!inputVolumeInput.hasFocus) {
-                                        inputVolumeInput.text = Math.round(value * 100).toString();
+                                    Audio.setChatVolume(value);
+                                    if (!chatVolumeInput.hasFocus) {
+                                        chatVolumeInput.text = Math.round(value * 100).toString();
                                     }
+                                }
+
+                                Connections {
+                                    function onChatVolumeChanged() {
+                                        value = Audio.chatVolume;
+                                    }
+
+                                    target: Audio
+                                }
+                            }
+                        }
+                    }
+
+                    SectionHeader {
+                        title: qsTr("Mic input volume")
+                        description: qsTr("mic_chain_out — processed mic signal sent to apps")
+                    }
+
+                    SectionContainer {
+                        contentSpacing: Tokens.spacing.normal
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Tokens.spacing.small
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText {
+                                    text: qsTr("Volume")
+                                    font.pointSize: Tokens.font.size.normal
+                                    font.weight: 500
+                                }
+
+                                Item {
+                                    Layout.fillWidth: true
+                                }
+
+                                StyledInputField {
+                                    id: micVolumeInput
+
+                                    Layout.preferredWidth: 70
+                                    validator: IntValidator {
+                                        bottom: 0
+                                        top: 100
+                                    }
+                                    enabled: !Audio.micMuted
+
+                                    Component.onCompleted: {
+                                        text = Math.round(Audio.micVolume * 100).toString();
+                                    }
+
+                                    onTextEdited: text => {
+                                        if (hasFocus) {
+                                            const val = parseInt(text);
+                                            if (!isNaN(val) && val >= 0 && val <= 100) {
+                                                Audio.setMicVolume(val / 100);
+                                            }
+                                        }
+                                    }
+
+                                    onEditingFinished: {
+                                        const val = parseInt(text);
+                                        if (isNaN(val) || val < 0 || val > 100) {
+                                            text = Math.round(Audio.micVolume * 100).toString();
+                                        }
+                                    }
+
+                                    Connections {
+                                        function onMicVolumeChanged() {
+                                            if (!micVolumeInput.hasFocus) {
+                                                micVolumeInput.text = Math.round(Audio.micVolume * 100).toString();
+                                            }
+                                        }
+
+                                        target: Audio
+                                    }
+                                }
+
+                                StyledText {
+                                    text: "%"
+                                    color: Colours.palette.m3outline
+                                    font.pointSize: Tokens.font.size.normal
+                                    opacity: Audio.micMuted ? 0.5 : 1
+                                }
+
+                                StyledRect {
+                                    implicitWidth: implicitHeight
+                                    implicitHeight: muteMicIcon.implicitHeight + Tokens.padding.normal * 2
+
+                                    radius: Tokens.rounding.normal
+                                    color: Audio.micMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+
+                                    StateLayer {
+                                        onClicked: {
+                                            if (Audio.micChainOutNode?.audio) {
+                                                Audio.micChainOutNode.audio.muted = !Audio.micChainOutNode.audio.muted;
+                                            }
+                                        }
+                                    }
+
+                                    MaterialIcon {
+                                        id: muteMicIcon
+
+                                        anchors.centerIn: parent
+                                        text: Audio.micMuted ? "mic_off" : "mic"
+                                        color: Audio.micMuted ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                                    }
+                                }
+                            }
+
+                            StyledSlider {
+                                Layout.fillWidth: true
+                                implicitHeight: Tokens.padding.normal * 3
+
+                                value: Audio.micVolume
+                                enabled: !Audio.micMuted
+                                opacity: enabled ? 1 : 0.5
+                                onMoved: {
+                                    Audio.setMicVolume(value);
+                                    if (!micVolumeInput.hasFocus) {
+                                        micVolumeInput.text = Math.round(value * 100).toString();
+                                    }
+                                }
+
+                                Connections {
+                                    function onMicVolumeChanged() {
+                                        value = Audio.micVolume;
+                                    }
+
+                                    target: Audio
                                 }
                             }
                         }
