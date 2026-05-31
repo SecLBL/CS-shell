@@ -276,7 +276,7 @@ Item {
 
                     SectionHeader {
                         title: qsTr("General output volume")
-                        description: qsTr("MixBus — all apps routing to the main output")
+                        description: qsTr("general_chain_out — after EQ, all apps routing to the main output")
                     }
 
                     SectionContainer {
