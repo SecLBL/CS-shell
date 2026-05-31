@@ -928,7 +928,7 @@ Item {
                                     }
                                 }
 
-                                StyledText { text: "HP"; implicitWidth: 22; horizontalAlignment: Text.AlignHCenter }
+                                StyledText { text: "HP"; Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter }
 
                                 StyledInputField {
                                     id: hpFreqInput
@@ -988,7 +988,7 @@ Item {
                                     }
                                 }
 
-                                StyledText { text: "LS"; implicitWidth: 22; horizontalAlignment: Text.AlignHCenter }
+                                StyledText { text: "LS"; Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter }
 
                                 StyledInputField {
                                     id: lsFreqInput
@@ -1031,7 +1031,7 @@ Item {
 
                                 StyledText {
                                     text: (root.eqState.LSgain >= 0 ? "+" : "") + root.eqState.LSgain.toFixed(1) + " dB"
-                                    implicitWidth: 58
+                                    Layout.preferredWidth: 58
                                 }
                             }
 
@@ -1059,7 +1059,7 @@ Item {
                                     }
                                 }
 
-                                StyledText { text: "1"; implicitWidth: 22; horizontalAlignment: Text.AlignHCenter }
+                                StyledText { text: "1"; Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter }
 
                                 StyledInputField {
                                     id: b1FreqInput
@@ -1102,7 +1102,7 @@ Item {
 
                                 StyledText {
                                     text: (root.eqState.gain1 >= 0 ? "+" : "") + root.eqState.gain1.toFixed(1) + " dB"
-                                    implicitWidth: 58
+                                    Layout.preferredWidth: 58
                                 }
                             }
 
@@ -1130,7 +1130,7 @@ Item {
                                     }
                                 }
 
-                                StyledText { text: "2"; implicitWidth: 22; horizontalAlignment: Text.AlignHCenter }
+                                StyledText { text: "2"; Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter }
 
                                 StyledInputField {
                                     id: b2FreqInput
@@ -1173,7 +1173,7 @@ Item {
 
                                 StyledText {
                                     text: (root.eqState.gain2 >= 0 ? "+" : "") + root.eqState.gain2.toFixed(1) + " dB"
-                                    implicitWidth: 58
+                                    Layout.preferredWidth: 58
                                 }
                             }
 
@@ -1201,7 +1201,7 @@ Item {
                                     }
                                 }
 
-                                StyledText { text: "3"; implicitWidth: 22; horizontalAlignment: Text.AlignHCenter }
+                                StyledText { text: "3"; Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter }
 
                                 StyledInputField {
                                     id: b3FreqInput
@@ -1244,7 +1244,7 @@ Item {
 
                                 StyledText {
                                     text: (root.eqState.gain3 >= 0 ? "+" : "") + root.eqState.gain3.toFixed(1) + " dB"
-                                    implicitWidth: 58
+                                    Layout.preferredWidth: 58
                                 }
                             }
 
@@ -1272,7 +1272,7 @@ Item {
                                     }
                                 }
 
-                                StyledText { text: "4"; implicitWidth: 22; horizontalAlignment: Text.AlignHCenter }
+                                StyledText { text: "4"; Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter }
 
                                 StyledInputField {
                                     id: b4FreqInput
@@ -1315,7 +1315,7 @@ Item {
 
                                 StyledText {
                                     text: (root.eqState.gain4 >= 0 ? "+" : "") + root.eqState.gain4.toFixed(1) + " dB"
-                                    implicitWidth: 58
+                                    Layout.preferredWidth: 58
                                 }
                             }
 
@@ -1343,7 +1343,7 @@ Item {
                                     }
                                 }
 
-                                StyledText { text: "HS"; implicitWidth: 22; horizontalAlignment: Text.AlignHCenter }
+                                StyledText { text: "HS"; Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter }
 
                                 StyledInputField {
                                     id: hsFreqInput
@@ -1386,7 +1386,7 @@ Item {
 
                                 StyledText {
                                     text: (root.eqState.HSgain >= 0 ? "+" : "") + root.eqState.HSgain.toFixed(1) + " dB"
-                                    implicitWidth: 58
+                                    Layout.preferredWidth: 58
                                 }
                             }
 
@@ -1414,7 +1414,7 @@ Item {
                                     }
                                 }
 
-                                StyledText { text: "LP"; implicitWidth: 22; horizontalAlignment: Text.AlignHCenter }
+                                StyledText { text: "LP"; Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter }
 
                                 StyledInputField {
                                     id: lpFreqInput
