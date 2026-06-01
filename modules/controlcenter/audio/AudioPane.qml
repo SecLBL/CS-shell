@@ -149,11 +149,74 @@ Item {
 
     Process { id: compParamProc }
 
+    property bool chatNrEnabled: true
+
+    function setChatNrEnabled(val: bool): void {
+        chatNrEnabled = val;
+        chatNrParamProc.command = [
+            "bash", "-c",
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"',
+            "0", "chat-nr", "enabled", val ? "1" : "0"
+        ];
+        chatNrParamProc.running = false;
+        chatNrParamProc.running = true;
+    }
+
+    Process {
+        id: chatNrLoadProc
+        command: ["bash", "-c",
+            'jq -r ".[\\"chat-nr\\"].params.enabled // 1" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/audio.json"']
+        stdout: SplitParser {
+            onRead: line => {
+                const v = parseInt(line.trim());
+                if (!isNaN(v)) root.chatNrEnabled = v !== 0;
+            }
+        }
+    }
+
+    Process { id: chatNrParamProc }
+
+    property var chatCompState: ({
+        enabled: 1, cm: 0,
+        al: 0.25119, at: 20, rrl: 0, rt: 100, hold: 0,
+        cr: 4.0, kn: 0.50118, mk: 1.0,
+        g_in: 1.0, g_out: 1.0, cdw: 100,
+        sct: 0, scm: 1, sla: 0, scr: 10, scp: 1.0, scs: 0,
+        shpm: 0, shpf: 10, slpm: 0, slpf: 20000,
+        bth: 0.000251, bsa: 1.99526
+    })
+
+    function setChatCompParam(symbol: string, value: real): void {
+        chatCompState = Object.assign({}, chatCompState, { [symbol]: value });
+        chatCompParamProc.command = [
+            "bash", "-c",
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"',
+            "0", "chat-comp", symbol, String(value)
+        ];
+        chatCompParamProc.running = false;
+        chatCompParamProc.running = true;
+    }
+
+    Process {
+        id: chatCompLoadProc
+        command: ["bash", "-c",
+            'jq -c ".[\\"chat-comp\\"].params // {}" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/audio.json"']
+        stdout: SplitParser {
+            onRead: line => {
+                try { root.chatCompState = Object.assign({}, root.chatCompState, JSON.parse(line)); } catch(e) {}
+            }
+        }
+    }
+
+    Process { id: chatCompParamProc }
+
     Component.onCompleted: {
         eqLoadProc.running = true;
         gateLoadProc.running = true;
         nrLoadProc.running = true;
         compLoadProc.running = true;
+        chatNrLoadProc.running = true;
+        chatCompLoadProc.running = true;
     }
 
     SplitPaneLayout {
@@ -2751,6 +2814,963 @@ Item {
 
                                 StyledText {
                                     text: (root.linToDb(root.compState.bsa) >= 0 ? "+" : "") + root.linToDb(root.compState.bsa).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+                        }
+                    }
+                }
+
+                    SectionHeader {
+                        title: qsTr("Chat Noise Reduction")
+                        description: qsTr("RNNoise — neural network based voice noise suppression")
+                    }
+
+                    SectionContainer {
+                        contentSpacing: Tokens.spacing.small
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Tokens.spacing.normal
+
+                            StyledRect {
+                                implicitWidth: implicitHeight
+                                implicitHeight: chatNrLabel.implicitHeight + Tokens.padding.small * 2
+                                radius: Tokens.rounding.small
+                                color: root.chatNrEnabled ? Colours.palette.m3primary
+                                                          : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                MaterialIcon {
+                                    anchors.centerIn: parent
+                                    text: "done"
+                                    color: root.chatNrEnabled ? Colours.palette.m3onPrimary
+                                                              : Colours.palette.m3onSurface
+                                }
+
+                                StateLayer {
+                                    onClicked: root.setChatNrEnabled(!root.chatNrEnabled)
+                                }
+                            }
+
+                            StyledText {
+                                id: chatNrLabel
+                                text: root.chatNrEnabled ? qsTr("Enabled") : qsTr("Disabled")
+                                font.weight: 500
+                            }
+
+                            Item { Layout.fillWidth: true }
+                        }
+                    }
+
+                    SectionHeader {
+                        title: qsTr("Chat Compressor")
+                        description: qsTr("LSP Compressor Stereo — dynamics control for chat signal")
+                    }
+
+                    SectionContainer {
+                        contentSpacing: Tokens.spacing.small
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Tokens.spacing.small
+
+                            // ── Enable + Mode ────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledRect {
+                                    implicitWidth: implicitHeight
+                                    implicitHeight: chatCompModeDownLabel.implicitHeight + Tokens.padding.small * 2
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.enabled ? Colours.palette.m3primary
+                                                                      : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "power_settings_new"
+                                        fill: root.chatCompState.enabled ? 1 : 0
+                                        color: root.chatCompState.enabled ? Colours.palette.m3onPrimary
+                                                                          : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer {
+                                        onClicked: root.setChatCompParam("enabled", root.chatCompState.enabled ? 0 : 1)
+                                    }
+                                }
+
+                                StyledText { text: qsTr("Mode"); font.weight: 500 }
+
+                                Item { Layout.fillWidth: true }
+
+                                StyledRect {
+                                    implicitWidth: chatCompModeDownLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompModeDownLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.cm === 0 ? Colours.palette.m3primary
+                                                                       : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompModeDownLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Down")
+                                        color: root.chatCompState.cm === 0 ? Colours.palette.m3onPrimary
+                                                                           : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("cm", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompModeUpLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompModeUpLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.cm === 1 ? Colours.palette.m3primary
+                                                                       : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompModeUpLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Up")
+                                        color: root.chatCompState.cm === 1 ? Colours.palette.m3onPrimary
+                                                                           : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("cm", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompModeBootLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompModeBootLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.cm === 2 ? Colours.palette.m3primary
+                                                                       : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompModeBootLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Boot")
+                                        color: root.chatCompState.cm === 2 ? Colours.palette.m3onPrimary
+                                                                           : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("cm", 2) }
+                                }
+                            }
+
+                            // ── Threshold ────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Threshold"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -60; to: 0
+                                    value: root.linToDb(root.chatCompState.al)
+                                    onMoved: root.setChatCompParam("al", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: root.linToDb(root.chatCompState.al).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Attack ───────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Attack"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 2000
+                                    value: root.chatCompState.at
+                                    onMoved: root.setChatCompParam("at", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.at.toFixed(1) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Hold ─────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Hold"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 1000
+                                    value: root.chatCompState.hold
+                                    onMoved: root.setChatCompParam("hold", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.hold.toFixed(0) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Release ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Release"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 5000
+                                    value: root.chatCompState.rt
+                                    onMoved: root.setChatCompParam("rt", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.rt.toFixed(0) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Release threshold ─────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Rel. Thr."); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -60; to: 0
+                                    value: root.chatCompState.rrl < 0.001 ? -60 : root.linToDb(root.chatCompState.rrl)
+                                    onMoved: {
+                                        const db = Math.round(value * 10) / 10;
+                                        root.setChatCompParam("rrl", db <= -59.9 ? 0.0 : root.dbToLin(db));
+                                    }
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.rrl < 0.001 ? qsTr("Auto")
+                                                                          : root.linToDb(root.chatCompState.rrl).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Ratio ─────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Ratio"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 1; to: 100
+                                    value: root.chatCompState.cr
+                                    onMoved: root.setChatCompParam("cr", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.cr.toFixed(1) + ":1"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Knee ─────────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Knee"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0.0631; to: 1.0
+                                    value: root.chatCompState.kn
+                                    onMoved: root.setChatCompParam("kn", Math.round(value * 1000) / 1000)
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.kn.toFixed(3)
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Makeup ───────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Makeup"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -40; to: 40
+                                    value: root.linToDb(root.chatCompState.mk)
+                                    onMoved: root.setChatCompParam("mk", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.chatCompState.mk) >= 0 ? "+" : "") + root.linToDb(root.chatCompState.mk).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Input gain ───────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Input gain"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -20; to: 20
+                                    value: root.linToDb(root.chatCompState.g_in)
+                                    onMoved: root.setChatCompParam("g_in", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.chatCompState.g_in) >= 0 ? "+" : "") + root.linToDb(root.chatCompState.g_in).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Output gain ──────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Output gain"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -20; to: 20
+                                    value: root.linToDb(root.chatCompState.g_out)
+                                    onMoved: root.setChatCompParam("g_out", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.chatCompState.g_out) >= 0 ? "+" : "") + root.linToDb(root.chatCompState.g_out).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Dry/Wet ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("Dry/Wet"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 100
+                                    value: root.chatCompState.cdw
+                                    onMoved: root.setChatCompParam("cdw", Math.round(value))
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.cdw.toFixed(0) + " %"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── SC Type ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Type"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: chatCompSctFfwdLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompSctFfwdLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.sct === 0 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompSctFfwdLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Feed-fwd")
+                                        color: root.chatCompState.sct === 0 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("sct", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompSctFbkLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompSctFbkLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.sct === 1 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompSctFbkLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Feed-bk")
+                                        color: root.chatCompState.sct === 1 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("sct", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompSctLinkLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompSctLinkLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.sct === 2 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompSctLinkLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Link")
+                                        color: root.chatCompState.sct === 2 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("sct", 2) }
+                                }
+
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── SC Mode ──────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Mode"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScmPeakLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScmPeakLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scm === 0 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScmPeakLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Peak")
+                                        color: root.chatCompState.scm === 0 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scm", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScmRmsLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScmRmsLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scm === 1 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScmRmsLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("RMS")
+                                        color: root.chatCompState.scm === 1 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scm", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScmLpfLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScmLpfLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scm === 2 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScmLpfLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("LPF")
+                                        color: root.chatCompState.scm === 2 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scm", 2) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScmSmaLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScmSmaLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scm === 3 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScmSmaLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("SMA")
+                                        color: root.chatCompState.scm === 3 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scm", 3) }
+                                }
+
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── SC Source ────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Source"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScsMidLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScsMidLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scs === 0 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScsMidLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Mid")
+                                        color: root.chatCompState.scs === 0 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scs", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScsSideLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScsSideLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scs === 1 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScsSideLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Side")
+                                        color: root.chatCompState.scs === 1 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scs", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScsLLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScsLLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scs === 2 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScsLLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("L")
+                                        color: root.chatCompState.scs === 2 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scs", 2) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScsRLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScsRLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scs === 3 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScsRLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("R")
+                                        color: root.chatCompState.scs === 3 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scs", 3) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScsMinLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScsMinLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scs === 4 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScsMinLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Min")
+                                        color: root.chatCompState.scs === 4 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scs", 4) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompScsMaxLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompScsMaxLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.scs === 5 ? Colours.palette.m3primary
+                                                                        : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompScsMaxLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("Max")
+                                        color: root.chatCompState.scs === 5 ? Colours.palette.m3onPrimary
+                                                                            : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("scs", 5) }
+                                }
+
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── SC Lookahead ─────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Lookahead"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 20
+                                    value: root.chatCompState.sla
+                                    onMoved: root.setChatCompParam("sla", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.sla.toFixed(1) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── SC Reactivity ────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Reactivity"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: 0; to: 250
+                                    value: root.chatCompState.scr
+                                    onMoved: root.setChatCompParam("scr", Math.round(value * 10) / 10)
+                                }
+
+                                StyledText {
+                                    text: root.chatCompState.scr.toFixed(1) + " ms"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── SC Preamp ────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC Preamp"); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -40; to: 40
+                                    value: root.linToDb(Math.max(root.chatCompState.scp, 0.001))
+                                    onMoved: root.setChatCompParam("scp", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(Math.max(root.chatCompState.scp, 0.001)) >= 0 ? "+" : "")
+                                          + root.linToDb(Math.max(root.chatCompState.scp, 0.001)).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── SC HP filter ─────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC HP"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: chatCompShpmOffLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompShpmOffLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.shpm === 0 ? Colours.palette.m3primary
+                                                                         : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompShpmOffLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("off")
+                                        color: root.chatCompState.shpm === 0 ? Colours.palette.m3onPrimary
+                                                                             : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("shpm", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompShpm12Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompShpm12Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.shpm === 1 ? Colours.palette.m3primary
+                                                                         : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompShpm12Label
+                                        anchors.centerIn: parent
+                                        text: "12"
+                                        color: root.chatCompState.shpm === 1 ? Colours.palette.m3onPrimary
+                                                                             : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("shpm", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompShpm24Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompShpm24Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.shpm === 2 ? Colours.palette.m3primary
+                                                                         : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompShpm24Label
+                                        anchors.centerIn: parent
+                                        text: "24"
+                                        color: root.chatCompState.shpm === 2 ? Colours.palette.m3onPrimary
+                                                                             : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("shpm", 2) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompShpm36Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompShpm36Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.shpm === 3 ? Colours.palette.m3primary
+                                                                         : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompShpm36Label
+                                        anchors.centerIn: parent
+                                        text: "36"
+                                        color: root.chatCompState.shpm === 3 ? Colours.palette.m3onPrimary
+                                                                             : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("shpm", 3) }
+                                }
+
+                                StyledInputField {
+                                    id: chatCompShpfInput
+                                    implicitWidth: 65
+                                    text: Math.round(root.chatCompState.shpf)
+                                    validator: IntValidator { bottom: 10; top: 20000 }
+                                    enabled: root.chatCompState.shpm > 0
+
+                                    onEditingFinished: {
+                                        const v = parseInt(text);
+                                        if (!isNaN(v))
+                                            root.setChatCompParam("shpf", Math.max(10, Math.min(20000, v)));
+                                    }
+                                }
+
+                                StyledText { text: "Hz" }
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── SC LP filter ─────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledText { text: qsTr("SC LP"); Layout.preferredWidth: 90 }
+
+                                StyledRect {
+                                    implicitWidth: chatCompSlpmOffLabel.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompSlpmOffLabel.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.slpm === 0 ? Colours.palette.m3primary
+                                                                         : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompSlpmOffLabel
+                                        anchors.centerIn: parent
+                                        text: qsTr("off")
+                                        color: root.chatCompState.slpm === 0 ? Colours.palette.m3onPrimary
+                                                                             : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("slpm", 0) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompSlpm12Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompSlpm12Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.slpm === 1 ? Colours.palette.m3primary
+                                                                         : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompSlpm12Label
+                                        anchors.centerIn: parent
+                                        text: "12"
+                                        color: root.chatCompState.slpm === 1 ? Colours.palette.m3onPrimary
+                                                                             : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("slpm", 1) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompSlpm24Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompSlpm24Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.slpm === 2 ? Colours.palette.m3primary
+                                                                         : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompSlpm24Label
+                                        anchors.centerIn: parent
+                                        text: "24"
+                                        color: root.chatCompState.slpm === 2 ? Colours.palette.m3onPrimary
+                                                                             : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("slpm", 2) }
+                                }
+
+                                StyledRect {
+                                    implicitWidth: chatCompSlpm36Label.implicitWidth + Tokens.padding.normal
+                                    implicitHeight: chatCompSlpm36Label.implicitHeight + Tokens.padding.small
+                                    radius: Tokens.rounding.small
+                                    color: root.chatCompState.slpm === 3 ? Colours.palette.m3primary
+                                                                         : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    StyledText {
+                                        id: chatCompSlpm36Label
+                                        anchors.centerIn: parent
+                                        text: "36"
+                                        color: root.chatCompState.slpm === 3 ? Colours.palette.m3onPrimary
+                                                                             : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer { onClicked: root.setChatCompParam("slpm", 3) }
+                                }
+
+                                StyledInputField {
+                                    id: chatCompSlpfInput
+                                    implicitWidth: 65
+                                    text: Math.round(root.chatCompState.slpf)
+                                    validator: IntValidator { bottom: 10; top: 20000 }
+                                    enabled: root.chatCompState.slpm > 0
+
+                                    onEditingFinished: {
+                                        const v = parseInt(text);
+                                        if (!isNaN(v))
+                                            root.setChatCompParam("slpf", Math.max(10, Math.min(20000, v)));
+                                    }
+                                }
+
+                                StyledText { text: "Hz" }
+                                Item { Layout.fillWidth: true }
+                            }
+
+                            // ── Boot: Boost threshold ─────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+                                opacity: root.chatCompState.cm === 2 ? 1.0 : 0.4
+
+                                StyledText { text: qsTr("Boost Thr."); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -120; to: -60
+                                    value: root.linToDb(root.chatCompState.bth)
+                                    onMoved: root.setChatCompParam("bth", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: root.linToDb(root.chatCompState.bth).toFixed(1) + " dB"
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            // ── Boot: Boost amount ────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+                                opacity: root.chatCompState.cm === 2 ? 1.0 : 0.4
+
+                                StyledText { text: qsTr("Boost Amt."); Layout.preferredWidth: 90 }
+
+                                StyledSlider {
+                                    Layout.fillWidth: true
+                                    implicitHeight: Tokens.padding.normal * 3
+                                    from: -40; to: 40
+                                    value: root.linToDb(root.chatCompState.bsa)
+                                    onMoved: root.setChatCompParam("bsa", root.dbToLin(Math.round(value * 10) / 10))
+                                }
+
+                                StyledText {
+                                    text: (root.linToDb(root.chatCompState.bsa) >= 0 ? "+" : "") + root.linToDb(root.chatCompState.bsa).toFixed(1) + " dB"
                                     Layout.preferredWidth: 72
                                     horizontalAlignment: Text.AlignRight
                                 }
