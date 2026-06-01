@@ -25,6 +25,28 @@ Singleton {
     property PwNode chatOutputDevice: null
     property PwNode micInputDevice: null
 
+    property string savedGeneralOutput: ""
+    property string savedChatOutput: ""
+    property string savedMicInput: ""
+
+    function tryRestoreRouting(): void {
+        for (const node of Pipewire.nodes.values) {
+            if (savedGeneralOutput && node.name === savedGeneralOutput
+                    && generalOutputDevice?.name !== savedGeneralOutput)
+                setGeneralOutput(node);
+            if (savedChatOutput && node.name === savedChatOutput
+                    && chatOutputDevice?.name !== savedChatOutput)
+                setChatOutput(node);
+            if (savedMicInput && node.name === savedMicInput
+                    && micInputDevice?.name !== savedMicInput)
+                setMicInput(node);
+        }
+    }
+
+    onSavedGeneralOutputChanged: tryRestoreRouting()
+    onSavedChatOutputChanged:    tryRestoreRouting()
+    onSavedMicInputChanged:      tryRestoreRouting()
+
     property PwNode generalChainOutNode: null
     property PwNode chatChainOutNode: null
     property PwNode micChainOutNode: null
@@ -216,6 +238,7 @@ Singleton {
     Component.onCompleted: {
         previousSinkName = sink?.description || sink?.name || qsTr("Unknown Device");
         previousSourceName = source?.description || source?.name || qsTr("Unknown Device");
+        routeLoadProc.running = true;
     }
 
     Connections {
@@ -243,6 +266,7 @@ Singleton {
             root.sinks = newSinks;
             root.sources = newSources;
             root.streams = newStreams;
+            root.tryRestoreRouting();
         }
 
         target: Pipewire.nodes
@@ -259,6 +283,22 @@ Singleton {
 
     Process {
         id: audioRouteProc
+    }
+
+    Process {
+        id: routeLoadProc
+        command: ["bash", "-c",
+            'jq -c "." "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/routing.json" 2>/dev/null || echo "{}"']
+        stdout: SplitParser {
+            onRead: line => {
+                try {
+                    const r = JSON.parse(line);
+                    root.savedGeneralOutput = r.general ?? "";
+                    root.savedChatOutput    = r.chat    ?? "";
+                    root.savedMicInput      = r.mic     ?? "";
+                } catch(e) {}
+            }
+        }
     }
 
     CavaProvider {
