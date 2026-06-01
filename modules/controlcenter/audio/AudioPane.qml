@@ -60,6 +60,7 @@ Item {
     function dbToLin(db: real): real { return Math.pow(10, db / 20); }
 
     property var gateState: ({
+        enabled: 1,
         gt: 0.01, gz: 0.59566, gh: 0, ht: 0.25119, hz: 0.50119,
         gr: 0.000251, mk: 1.41254, at: 2.92, rt: 100, hold: 171
     })
@@ -1603,6 +1604,39 @@ Item {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: Tokens.spacing.small
+
+                            // ── Enable ───────────────────────────────────────────────────
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.normal
+
+                                StyledRect {
+                                    implicitWidth: implicitHeight
+                                    implicitHeight: gateEnableRef.implicitHeight + Tokens.padding.small * 2
+                                    radius: Tokens.rounding.small
+                                    color: root.gateState.enabled ? Colours.palette.m3primary
+                                                                  : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "power_settings_new"
+                                        fill: root.gateState.enabled ? 1 : 0
+                                        color: root.gateState.enabled ? Colours.palette.m3onPrimary
+                                                                      : Colours.palette.m3onSurface
+                                    }
+
+                                    StateLayer {
+                                        onClicked: root.setGateParam("enabled", root.gateState.enabled ? 0 : 1)
+                                    }
+                                }
+
+                                StyledText {
+                                    id: gateEnableRef
+                                    text: root.gateState.enabled ? qsTr("Enabled") : qsTr("Disabled")
+                                }
+
+                                Item { Layout.fillWidth: true }
+                            }
 
                             // ── Threshold ────────────────────────────────────────────────
                             RowLayout {
