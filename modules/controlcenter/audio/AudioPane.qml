@@ -2820,7 +2820,6 @@ Item {
                             }
                         }
                     }
-                }
 
                     SectionHeader {
                         title: qsTr("Chat Noise Reduction")
