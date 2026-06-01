@@ -94,23 +94,11 @@ Item {
         nrEnabled = val;
         nrParamProc.command = [
             "bash", "-c",
-            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"',
-            "0", "mic-nr", "enabled", val ? "1" : "0"
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-nr-bypass.sh" "$@"',
+            "0", "mic-nr", val ? "1" : "0"
         ];
         nrParamProc.running = false;
         nrParamProc.running = true;
-    }
-
-    Process {
-        id: nrLoadProc
-        command: ["bash", "-c",
-            'jq -r ".[\\"mic-nr\\"].params.enabled // 1" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/audio.json"']
-        stdout: SplitParser {
-            onRead: line => {
-                const v = parseInt(line.trim());
-                if (!isNaN(v)) root.nrEnabled = v !== 0;
-            }
-        }
     }
 
     Process { id: nrParamProc }
@@ -155,23 +143,11 @@ Item {
         chatNrEnabled = val;
         chatNrParamProc.command = [
             "bash", "-c",
-            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"',
-            "0", "chat-nr", "enabled", val ? "1" : "0"
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-nr-bypass.sh" "$@"',
+            "0", "chat-nr", val ? "1" : "0"
         ];
         chatNrParamProc.running = false;
         chatNrParamProc.running = true;
-    }
-
-    Process {
-        id: chatNrLoadProc
-        command: ["bash", "-c",
-            'jq -r ".[\\"chat-nr\\"].params.enabled // 1" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/audio.json"']
-        stdout: SplitParser {
-            onRead: line => {
-                const v = parseInt(line.trim());
-                if (!isNaN(v)) root.chatNrEnabled = v !== 0;
-            }
-        }
     }
 
     Process { id: chatNrParamProc }
@@ -213,9 +189,7 @@ Item {
     Component.onCompleted: {
         eqLoadProc.running = true;
         gateLoadProc.running = true;
-        nrLoadProc.running = true;
         compLoadProc.running = true;
-        chatNrLoadProc.running = true;
         chatCompLoadProc.running = true;
     }
 
