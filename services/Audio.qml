@@ -31,13 +31,16 @@ Singleton {
 
     function tryRestoreRouting(): void {
         for (const node of Pipewire.nodes.values) {
-            if (savedGeneralOutput && node.name === savedGeneralOutput
+            if (root.generalChainOutNode && savedGeneralOutput
+                    && node.name === savedGeneralOutput
                     && generalOutputDevice?.name !== savedGeneralOutput)
                 setGeneralOutput(node);
-            if (savedChatOutput && node.name === savedChatOutput
+            if (root.chatChainOutNode && savedChatOutput
+                    && node.name === savedChatOutput
                     && chatOutputDevice?.name !== savedChatOutput)
                 setChatOutput(node);
-            if (savedMicInput && node.name === savedMicInput
+            if (root.micChainInNode && savedMicInput
+                    && node.name === savedMicInput
                     && micInputDevice?.name !== savedMicInput)
                 setMicInput(node);
         }
@@ -50,6 +53,7 @@ Singleton {
     property PwNode generalChainOutNode: null
     property PwNode chatChainOutNode: null
     property PwNode micChainOutNode: null
+    property PwNode micChainInNode: null
 
     readonly property var chromashellNodeNames: new Set([
         "MixBus.input", "MixBus.output",
@@ -246,11 +250,13 @@ Singleton {
             const newSinks = [];
             const newSources = [];
             const newStreams = [];
+            let foundGenChain = false, foundChatChain = false, foundMicChainIn = false;
 
             for (const node of Pipewire.nodes.values) {
-                if (node.name === "general_chain_out") root.generalChainOutNode = node;
-                if (node.name === "chat_chain_out")    root.chatChainOutNode    = node;
-                if (node.name === "mic_chain_out")     root.micChainOutNode     = node;
+                if (node.name === "general_chain_out") { root.generalChainOutNode = node; foundGenChain   = true; }
+                if (node.name === "chat_chain_out")    { root.chatChainOutNode    = node; foundChatChain  = true; }
+                if (node.name === "mic_chain_out")       root.micChainOutNode    = node;
+                if (node.name === "mic_chain_in")      { root.micChainInNode      = node; foundMicChainIn = true; }
                 if (root.chromashellNodeNames.has(node.name))
                     continue;
                 if (!node.isStream) {
@@ -262,6 +268,10 @@ Singleton {
                     newStreams.push(node);
                 }
             }
+
+            if (!foundGenChain)   { root.generalChainOutNode = null; root.generalOutputDevice = null; }
+            if (!foundChatChain)  { root.chatChainOutNode    = null; root.chatOutputDevice    = null; }
+            if (!foundMicChainIn) { root.micChainInNode      = null; root.micInputDevice      = null; }
 
             root.sinks = newSinks;
             root.sources = newSources;
@@ -277,7 +287,8 @@ Singleton {
             ...root.sinks, ...root.sources, ...root.streams,
             ...(root.generalChainOutNode ? [root.generalChainOutNode] : []),
             ...(root.chatChainOutNode    ? [root.chatChainOutNode]    : []),
-            ...(root.micChainOutNode     ? [root.micChainOutNode]     : [])
+            ...(root.micChainOutNode     ? [root.micChainOutNode]     : []),
+            ...(root.micChainInNode      ? [root.micChainInNode]      : [])
         ]
     }
 
