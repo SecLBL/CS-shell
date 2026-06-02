@@ -253,10 +253,22 @@ Singleton {
             let foundGenChain = false, foundChatChain = false, foundMicChainIn = false;
 
             for (const node of Pipewire.nodes.values) {
-                if (node.name === "general_chain_out") { root.generalChainOutNode = node; foundGenChain   = true; }
-                if (node.name === "chat_chain_out")    { root.chatChainOutNode    = node; foundChatChain  = true; }
-                if (node.name === "mic_chain_out")       root.micChainOutNode    = node;
-                if (node.name === "mic_chain_in")      { root.micChainInNode      = node; foundMicChainIn = true; }
+                if (node.name === "general_chain_out") {
+                    if (root.generalChainOutNode !== null && root.generalChainOutNode !== node)
+                        root.generalOutputDevice = null;
+                    root.generalChainOutNode = node; foundGenChain = true;
+                }
+                if (node.name === "chat_chain_out") {
+                    if (root.chatChainOutNode !== null && root.chatChainOutNode !== node)
+                        root.chatOutputDevice = null;
+                    root.chatChainOutNode = node; foundChatChain = true;
+                }
+                if (node.name === "mic_chain_out")  root.micChainOutNode = node;
+                if (node.name === "mic_chain_in") {
+                    if (root.micChainInNode !== null && root.micChainInNode !== node)
+                        root.micInputDevice = null;
+                    root.micChainInNode = node; foundMicChainIn = true;
+                }
                 if (root.chromashellNodeNames.has(node.name))
                     continue;
                 if (!node.isStream) {
