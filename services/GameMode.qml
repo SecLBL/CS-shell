@@ -16,7 +16,8 @@ Singleton {
         // hyprctl keyword doesn't work with the Lua parser; use eval + hl.config instead.
         Hypr.extras.message(
             "eval hl.config({ animations = { enabled = false }," +
-            " decoration = { shadow = { enabled = false }, blur = { enabled = false }, rounding = 0 }," +
+            " decoration = { shadow = { enabled = false }, blur = { enabled = false }, rounding = 0," +
+            " inactive_opacity = 1.0, dim_inactive = false }," +
             " general = { gaps_in = 0, gaps_out = 0, border_size = 1, allow_tearing = true } })"
         );
     }
