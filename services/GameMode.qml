@@ -20,6 +20,12 @@ Singleton {
             " inactive_opacity = 1.0, dim_inactive = false }," +
             " general = { gaps_in = 0, gaps_out = 0, border_size = 1, allow_tearing = true } })"
         );
+        // rules.lua sets opacity 0.8 override for all windows; override it back to 1.0.
+        // Later rules take precedence, so this wins over the existing rule.
+        // hyprctl reload on disable clears this runtime rule.
+        Hypr.extras.message(
+            "eval hl.window_rule({ match={ class='.*' }, opacity='1.0 override 1.0 override' })"
+        );
     }
 
     onEnabledChanged: {
