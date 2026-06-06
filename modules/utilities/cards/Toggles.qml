@@ -101,11 +101,10 @@ StyledRect {
                     roleValue: "mic"
                     delegate: Toggle {
                         icon: "mic"
-                        checked: !Audio.sourceMuted
+                        checked: !Audio.micMuted
                         onClicked: {
-                            const audio = Audio.source?.audio;
-                            if (audio)
-                                audio.muted = !audio.muted;
+                            if (Audio.micChainOutNode?.audio)
+                                Audio.micChainOutNode.audio.muted = !Audio.micChainOutNode.audio.muted;
                         }
                     }
                 }
