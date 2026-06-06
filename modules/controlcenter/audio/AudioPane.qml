@@ -153,6 +153,21 @@ Item {
 
     Process { id: chatNrParamProc }
 
+    Process {
+        id: nrLoadProc
+        command: ["bash", "-c",
+            'jq -c "{mic_nr: (.mic_nr // 1), chat_nr: (.chat_nr // 1)}" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/routing.json" 2>/dev/null || echo "{\"mic_nr\":1,\"chat_nr\":1}"']
+        stdout: SplitParser {
+            onRead: line => {
+                try {
+                    const r = JSON.parse(line);
+                    root.nrEnabled = r.mic_nr !== 0;
+                    root.chatNrEnabled = r.chat_nr !== 0;
+                } catch(e) {}
+            }
+        }
+    }
+
     property var chatCompState: ({
         enabled: 1, cm: 0,
         al: 0.25119, at: 20, rrl: 0, rt: 100, hold: 0,
@@ -192,6 +207,7 @@ Item {
         gateLoadProc.running = true;
         compLoadProc.running = true;
         chatCompLoadProc.running = true;
+        nrLoadProc.running = true;
     }
 
     SplitPaneLayout {
