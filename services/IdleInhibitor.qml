@@ -1,31 +1,48 @@
 pragma Singleton
 
+import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import qs.utils
 
 Singleton {
     id: root
 
-    property alias enabled: props.enabled
-    readonly property alias enabledSince: props.enabledSince
+    property bool enabled: false
+    property date enabledSince
 
     onEnabledChanged: {
         if (enabled)
-            props.enabledSince = new Date();
+            root.enabledSince = new Date();
+        if (storage.loaded)
+            storage.setText(JSON.stringify({ enabled: root.enabled, enabledSince: root.enabledSince }));
     }
 
-    PersistentProperties {
-        id: props
+    FileView {
+        id: storage
 
-        property bool enabled
-        property date enabledSince
+        property bool loaded: false
 
-        reloadableId: "idleInhibitor"
+        printErrors: false
+        path: `${Paths.state}/idle.json`
+
+        onLoaded: {
+            const data = JSON.parse(text());
+            root.enabled = data.enabled ?? false;
+            if (data.enabledSince)
+                root.enabledSince = new Date(data.enabledSince);
+            loaded = true;
+        }
+        onLoadFailed: err => {
+            if (err === FileViewError.FileNotFound)
+                Qt.callLater(() => setText(JSON.stringify({ enabled: false })));
+            loaded = true;
+        }
     }
 
     IdleInhibitor {
-        enabled: props.enabled
+        enabled: root.enabled
         window: PanelWindow {
             implicitWidth: 0
             implicitHeight: 0
@@ -36,19 +53,19 @@ Singleton {
 
     IpcHandler {
         function isEnabled(): bool {
-            return props.enabled;
+            return root.enabled;
         }
 
         function toggle(): void {
-            props.enabled = !props.enabled;
+            root.enabled = !root.enabled;
         }
 
         function enable(): void {
-            props.enabled = true;
+            root.enabled = true;
         }
 
         function disable(): void {
-            props.enabled = false;
+            root.enabled = false;
         }
 
         target: "idleInhibitor"
