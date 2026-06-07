@@ -44,11 +44,17 @@ Singleton {
     IdleInhibitor {
         enabled: root.enabled
         window: PanelWindow {
-            implicitWidth: 0
-            implicitHeight: 0
+            implicitWidth: 1
+            implicitHeight: 1
             color: "transparent"
             mask: Region {}
         }
+    }
+
+    Process {
+        running: root.enabled
+        command: ["systemd-inhibit", "--what=sleep:idle", "--mode=block",
+                  "--who=Caelestia", "--why=Keep Awake", "tail", "-f", "/dev/null"]
     }
 
     IpcHandler {
