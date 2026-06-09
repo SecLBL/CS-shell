@@ -11,7 +11,7 @@ Singleton {
 
     property bool enabled: false
     property date enabledSince
-
+    
     onEnabledChanged: {
         if (enabled)
             root.enabledSince = new Date();
@@ -51,6 +51,8 @@ Singleton {
         }
     }
 
+
+    // Fallback
     Process {
         running: root.enabled
         command: ["systemd-inhibit", "--what=sleep:idle", "--mode=block",
