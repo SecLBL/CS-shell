@@ -114,10 +114,6 @@ Item {
 
                 value: Audio.chatVolume
                 onMoved: Audio.setChatVolume(value)
-
-                Behavior on value {
-                    Anim {}
-                }
             }
         }
 
@@ -158,10 +154,6 @@ Item {
 
                 value: Audio.micVolume
                 onMoved: Audio.setMicVolume(value)
-
-                Behavior on value {
-                    Anim {}
-                }
             }
         }
 

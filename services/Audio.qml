@@ -99,7 +99,7 @@ Singleton {
     }
 
     function setChatVolume(newVolume: real): void {
-        if (chatChainOutNode?.audio) {
+        if (chatChainOutNode?.ready && chatChainOutNode?.audio) {
             chatChainOutNode.audio.muted = false;
             chatChainOutNode.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
         }
@@ -114,7 +114,7 @@ Singleton {
     }
 
     function setMicVolume(newVolume: real): void {
-        if (micChainOutNode?.audio) {
+        if (micChainOutNode?.ready && micChainOutNode?.audio) {
             micChainOutNode.audio.muted = false;
             micChainOutNode.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
         }
