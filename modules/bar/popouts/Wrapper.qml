@@ -186,6 +186,7 @@ Item {
                         property: "active"
                     }
                     Anim {
+                        type: Anim.DefaultEffects
                         property: "opacity"
                     }
                 }
@@ -196,6 +197,7 @@ Item {
 
                 SequentialAnimation {
                     Anim {
+                        type: Anim.DefaultEffects
                         property: "opacity"
                     }
                     PropertyAction {

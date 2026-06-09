@@ -8,11 +8,11 @@ namespace caelestia::config {
 
 class AnimTokens;
 class AppearanceBlur;
-class AppearanceFont;
 class AppearancePadding;
 class AppearanceRounding;
 class AppearanceSpacing;
 class AppearanceTransparency;
+class FontTokens;
 class GlobalConfig;
 class SizeTokens;
 class TokenConfig;
@@ -25,16 +25,17 @@ class Tokens : public QQuickAttachedPropertyPropagator, public QQmlParserStatus 
     QML_ATTACHED(Tokens)
     Q_MOC_INCLUDE("anim.hpp")
     Q_MOC_INCLUDE("appearanceconfig.hpp")
+    Q_MOC_INCLUDE("font.hpp")
     Q_MOC_INCLUDE("tokens.hpp")
 
     Q_PROPERTY(QString screen READ screen WRITE inheritScreen NOTIFY sourceChanged)
     Q_PROPERTY(const caelestia::config::AppearanceRounding* rounding READ rounding NOTIFY sourceChanged)
     Q_PROPERTY(const caelestia::config::AppearanceSpacing* spacing READ spacing NOTIFY sourceChanged)
     Q_PROPERTY(const caelestia::config::AppearancePadding* padding READ padding NOTIFY sourceChanged)
-    Q_PROPERTY(const caelestia::config::AppearanceFont* font READ font NOTIFY sourceChanged)
     Q_PROPERTY(const caelestia::config::AppearanceTransparency* transparency READ transparency NOTIFY sourceChanged)
     Q_PROPERTY(const caelestia::config::AppearanceBlur* blur READ blur NOTIFY sourceChanged)
     Q_PROPERTY(const caelestia::config::SizeTokens* sizes READ sizes NOTIFY sourceChanged)
+    Q_PROPERTY(const caelestia::config::FontTokens* font READ font NOTIFY sourceChanged)
     Q_PROPERTY(const caelestia::config::AnimTokens* anim READ anim NOTIFY sourceChanged)
 
 public:
@@ -46,11 +47,11 @@ public:
     [[nodiscard]] const AppearanceRounding* rounding() const;
     [[nodiscard]] const AppearanceSpacing* spacing() const;
     [[nodiscard]] const AppearancePadding* padding() const;
-    [[nodiscard]] const AppearanceFont* font() const;
     [[nodiscard]] const AppearanceTransparency* transparency() const;
     [[nodiscard]] const AppearanceBlur* blur() const;
 
     [[nodiscard]] const SizeTokens* sizes() const;
+    [[nodiscard]] const FontTokens* font() const;
     [[nodiscard]] const AnimTokens* anim() const;
 
     [[nodiscard]] Q_INVOKABLE static TokenConfig* forScreen(const QString& screen);
@@ -70,11 +71,13 @@ private:
 
     void propagateScreen();
     void bindAnim();
+    void bindFont();
 
     bool m_complete = false;
     QString m_screen;
     GlobalConfig* m_config = nullptr;
     TokenConfig* m_tokens = nullptr;
+    FontTokens* m_font = nullptr;
     AnimTokens* m_anim = nullptr;
 };
 

@@ -229,16 +229,15 @@ Item {
 
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    spacing: Tokens.spacing.normal
+                    spacing: Tokens.spacing.medium
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: Tokens.spacing.smaller
+                        spacing: Tokens.spacing.medium
 
                         StyledText {
                             text: qsTr("Audio")
-                            font.pointSize: Tokens.font.size.large
-                            font.weight: 500
+                            font: Tokens.font.body.builders.large.weight(Font.Medium).build()
                         }
 
                         Item {
@@ -256,6 +255,16 @@ Item {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: Tokens.spacing.small
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.small
+
+                                StyledText {
+                                    text: qsTr("Devices (%1)").arg(Audio.sinks.length)
+                                    font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+                                }
+                            }
 
                             StyledText {
                                 Layout.fillWidth: true
@@ -275,6 +284,9 @@ Item {
                                     color: Audio.generalOutputDevice?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                                     radius: Tokens.rounding.normal
                                     implicitHeight: generalOutputRow.implicitHeight + Tokens.padding.normal * 2
+                                    color: Audio.sink?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
+                                    radius: Tokens.rounding.large
+                                    implicitHeight: outputRowLayout.implicitHeight + Tokens.padding.medium * 2
 
                                     StateLayer {
                                         onClicked: Audio.setGeneralOutput(modelData)
@@ -286,14 +298,17 @@ Item {
                                         anchors.left: parent.left
                                         anchors.right: parent.right
                                         anchors.verticalCenter: parent.verticalCenter
-                                        anchors.margins: Tokens.padding.normal
+                                        anchors.margins: Tokens.padding.medium
 
-                                        spacing: Tokens.spacing.normal
+                                        spacing: Tokens.spacing.medium
 
                                         MaterialIcon {
                                             text: Audio.generalOutputDevice?.id === modelData.id ? "speaker" : "speaker_group"
                                             font.pointSize: Tokens.font.size.large
                                             fill: Audio.generalOutputDevice?.id === modelData.id ? 1 : 0
+                                            text: Audio.sink?.id === modelData.id ? "speaker" : "speaker_group"
+                                            fontStyle: Tokens.font.icon.large
+                                            fill: Audio.sink?.id === modelData.id ? 1 : 0
                                         }
 
                                         StyledText {
@@ -303,6 +318,7 @@ Item {
 
                                             text: modelData.description || qsTr("Unknown")
                                             font.weight: Audio.generalOutputDevice?.id === modelData.id ? 500 : 400
+                                            font: Audio.sink?.id === modelData.id ? Tokens.font.body.builders.small.weight(Font.Medium).build() : Tokens.font.body.builders.small.weight(Font.Normal).build()
                                         }
                                     }
                                 }
@@ -369,6 +385,9 @@ Item {
                                             font.weight: Audio.chatOutputDevice?.id === modelData.id ? 500 : 400
                                         }
                                     }
+                                StyledText {
+                                    text: qsTr("Devices (%1)").arg(Audio.sources.length)
+                                    font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
                                 }
                             }
                         }
@@ -403,6 +422,9 @@ Item {
                                     color: Audio.micInputDevice?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                                     radius: Tokens.rounding.normal
                                     implicitHeight: micInputRow.implicitHeight + Tokens.padding.normal * 2
+                                    color: Audio.source?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
+                                    radius: Tokens.rounding.large
+                                    implicitHeight: inputRowLayout.implicitHeight + Tokens.padding.medium * 2
 
                                     StateLayer {
                                         onClicked: Audio.setMicInput(modelData)
@@ -414,14 +436,16 @@ Item {
                                         anchors.left: parent.left
                                         anchors.right: parent.right
                                         anchors.verticalCenter: parent.verticalCenter
-                                        anchors.margins: Tokens.padding.normal
+                                        anchors.margins: Tokens.padding.medium
 
-                                        spacing: Tokens.spacing.normal
+                                        spacing: Tokens.spacing.medium
 
                                         MaterialIcon {
                                             text: "mic"
                                             font.pointSize: Tokens.font.size.large
                                             fill: Audio.micInputDevice?.id === modelData.id ? 1 : 0
+                                            fontStyle: Tokens.font.icon.large
+                                            fill: Audio.source?.id === modelData.id ? 1 : 0
                                         }
 
                                         StyledText {
@@ -431,6 +455,7 @@ Item {
 
                                             text: modelData.description || qsTr("Unknown")
                                             font.weight: Audio.micInputDevice?.id === modelData.id ? 500 : 400
+                                            font: Audio.source?.id === modelData.id ? Tokens.font.body.builders.small.weight(Font.Medium).build() : Tokens.font.body.builders.small.weight(Font.Normal).build()
                                         }
                                     }
                                 }
@@ -458,7 +483,7 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    spacing: Tokens.spacing.normal
+                    spacing: Tokens.spacing.medium
 
                     SettingsHeader {
                         icon: "volume_up"
@@ -471,7 +496,7 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Tokens.spacing.normal
+                        contentSpacing: Tokens.spacing.medium
 
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -479,12 +504,11 @@ Item {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.normal
+                                spacing: Tokens.spacing.medium
 
                                 StyledText {
                                     text: qsTr("Volume")
-                                    font.pointSize: Tokens.font.size.normal
-                                    font.weight: 500
+                                    font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
                                 }
 
                                 Item {
@@ -535,15 +559,16 @@ Item {
                                 StyledText {
                                     text: "%"
                                     color: Colours.palette.m3outline
-                                    font.pointSize: Tokens.font.size.normal
+                                    font: Tokens.font.body.medium
                                     opacity: Audio.muted ? 0.5 : 1
                                 }
 
                                 StyledRect {
                                     implicitWidth: implicitHeight
                                     implicitHeight: muteGeneralIcon.implicitHeight + Tokens.padding.normal * 2
+                                    implicitHeight: muteIcon.implicitHeight + Tokens.padding.medium * 2
 
-                                    radius: Tokens.rounding.normal
+                                    radius: Tokens.rounding.large
                                     color: Audio.muted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                                     StateLayer {
@@ -566,7 +591,7 @@ Item {
 
                             StyledSlider {
                                 Layout.fillWidth: true
-                                implicitHeight: Tokens.padding.normal * 3
+                                implicitHeight: Tokens.padding.medium * 3
 
                                 value: Audio.volume
                                 enabled: !Audio.muted
@@ -587,7 +612,7 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Tokens.spacing.normal
+                        contentSpacing: Tokens.spacing.medium
 
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -595,12 +620,11 @@ Item {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.normal
+                                spacing: Tokens.spacing.medium
 
                                 StyledText {
                                     text: qsTr("Volume")
-                                    font.pointSize: Tokens.font.size.normal
-                                    font.weight: 500
+                                    font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
                                 }
 
                                 Item {
@@ -653,6 +677,8 @@ Item {
                                     color: Colours.palette.m3outline
                                     font.pointSize: Tokens.font.size.normal
                                     opacity: Audio.chatMuted ? 0.5 : 1
+                                    font: Tokens.font.body.medium
+                                    opacity: Audio.sourceMuted ? 0.5 : 1
                                 }
 
                                 StyledRect {
@@ -661,6 +687,10 @@ Item {
 
                                     radius: Tokens.rounding.normal
                                     color: Audio.chatMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+                                    implicitHeight: muteInputIcon.implicitHeight + Tokens.padding.medium * 2
+
+                                    radius: Tokens.rounding.large
+                                    color: Audio.sourceMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                                     StateLayer {
                                         onClicked: {
@@ -682,7 +712,7 @@ Item {
 
                             StyledSlider {
                                 Layout.fillWidth: true
-                                implicitHeight: Tokens.padding.normal * 3
+                                implicitHeight: Tokens.padding.medium * 3
 
                                 value: Audio.chatVolume
                                 enabled: !Audio.chatMuted
@@ -835,7 +865,7 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Tokens.spacing.normal
+                        contentSpacing: Tokens.spacing.medium
 
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -850,15 +880,15 @@ Item {
                                     required property int index
 
                                     Layout.fillWidth: true
-                                    spacing: Tokens.spacing.smaller
+                                    spacing: Tokens.spacing.medium
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: Tokens.spacing.normal
+                                        spacing: Tokens.spacing.medium
 
                                         MaterialIcon {
                                             text: "apps"
-                                            font.pointSize: Tokens.font.size.normal
+                                            fontStyle: Tokens.font.icon.medium
                                             fill: 0
                                         }
 
@@ -867,8 +897,7 @@ Item {
                                             elide: Text.ElideRight
                                             maximumLineCount: 1
                                             text: Audio.getStreamName(modelData)
-                                            font.pointSize: Tokens.font.size.normal
-                                            font.weight: 500
+                                            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
                                         }
 
                                         StyledInputField {
@@ -915,15 +944,15 @@ Item {
                                         StyledText {
                                             text: "%"
                                             color: Colours.palette.m3outline
-                                            font.pointSize: Tokens.font.size.normal
+                                            font: Tokens.font.body.medium
                                             opacity: Audio.getStreamMuted(modelData) ? 0.5 : 1
                                         }
 
                                         StyledRect {
                                             implicitWidth: implicitHeight
-                                            implicitHeight: streamMuteIcon.implicitHeight + Tokens.padding.normal * 2
+                                            implicitHeight: streamMuteIcon.implicitHeight + Tokens.padding.medium * 2
 
-                                            radius: Tokens.rounding.normal
+                                            radius: Tokens.rounding.large
                                             color: Audio.getStreamMuted(modelData) ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                                             StateLayer {
@@ -944,7 +973,7 @@ Item {
 
                                     StyledSlider {
                                         Layout.fillWidth: true
-                                        implicitHeight: Tokens.padding.normal * 3
+                                        implicitHeight: Tokens.padding.medium * 3
 
                                         value: Audio.getStreamVolume(modelData)
                                         enabled: !Audio.getStreamMuted(modelData)
@@ -972,7 +1001,7 @@ Item {
                                 visible: Audio.streams.length === 0
                                 text: qsTr("No applications currently playing audio")
                                 color: Colours.palette.m3outline
-                                font.pointSize: Tokens.font.size.small
+                                font: Tokens.font.body.small
                                 horizontalAlignment: Text.AlignHCenter
                             }
                         }

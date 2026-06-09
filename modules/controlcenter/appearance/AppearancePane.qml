@@ -111,10 +111,9 @@ Item {
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    Layout.bottomMargin: Tokens.spacing.normal
+                    Layout.bottomMargin: Tokens.spacing.medium
                     text: qsTr("Wallpaper")
-                    font.pointSize: Tokens.font.size.extraLarge
-                    font.weight: 600
+                    font: Tokens.font.body.builders.large.size(28).weight(Font.DemiBold).build()
                 }
 
                 Loader {
@@ -122,7 +121,7 @@ Item {
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.bottomMargin: -Tokens.padding.large * 2
+                    Layout.bottomMargin: -Tokens.padding.extraLargeIncreased
 
                     asynchronous: true
                     active: {
@@ -175,12 +174,11 @@ Item {
                     spacing: Tokens.spacing.small
 
                     RowLayout {
-                        spacing: Tokens.spacing.smaller
+                        spacing: Tokens.spacing.medium
 
                         StyledText {
                             text: qsTr("Appearance")
-                            font.pointSize: Tokens.font.size.large
-                            font.weight: 500
+                            font: Tokens.font.body.builders.large.weight(Font.Medium).build()
                         }
 
                         Item {

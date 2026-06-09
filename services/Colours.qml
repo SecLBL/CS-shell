@@ -26,6 +26,9 @@ Singleton {
     readonly property Blur blur: Blur {}
     readonly property alias wallLuminance: analyser.luminance
 
+    property bool cooldownPending
+    property real lastBaseTransparency
+
     function getLuminance(c: color): real {
         if (c.r == 0 && c.g == 0 && c.b == 0)
             return 0;
@@ -86,7 +89,16 @@ Singleton {
         ]);
     }
 
-    Component.onCompleted: debounceTimer.triggered()
+    function requestReloadHyprRules(): void {
+        if (cooldownTimer.running) {
+            root.cooldownPending = true;
+        } else {
+            root.reloadHyprRules();
+            cooldownTimer.restart();
+        }
+    }
+
+    Component.onCompleted: root.requestReloadHyprRules()
 
     Connections {
         function onConfigReloaded(): void {
@@ -110,10 +122,23 @@ Singleton {
     }
 
     Timer {
-        id: debounceTimer
+        id: cooldownTimer
 
-        interval: 300
-        onTriggered: root.reloadHyprRules()
+        interval: 30
+        onTriggered: {
+            if (root.cooldownPending) {
+                root.cooldownPending = false;
+                root.reloadHyprRules();
+                restart();
+            }
+        }
+    }
+
+    Timer {
+        id: cAnimCompleteTimer
+
+        interval: Tokens.anim.durations.expressiveSlowEffects
+        onTriggered: root.requestReloadHyprRules()
     }
 
     component Transparency: QtObject {
@@ -122,19 +147,28 @@ Singleton {
         readonly property real layers: Tokens.transparency.layers
     }
 
+        onEnabledChanged: {
+            if (enabled)
+                root.requestReloadHyprRules();
+            else
+                cAnimCompleteTimer.start();
+        }
+        onBaseChanged: {
+            if (root.lastBaseTransparency > base)
+                root.requestReloadHyprRules();
+            else
+                cAnimCompleteTimer.start();
+            root.lastBaseTransparency = base;
+        }
+    }
+
     component Blur: QtObject {
         readonly property bool enabled: Tokens.blur.enabled
     }
 
     Connections {
-        target: transparency
-        function onEnabledChanged() { debounceTimer.restart() }
-        function onBaseChanged() { debounceTimer.restart() }
-    }
-
-    Connections {
         target: blur
-        function onEnabledChanged() { debounceTimer.restart() }
+        function onEnabledChanged() { root.requestReloadHyprRules() }
     }
 
     component M3TPalette: QtObject {

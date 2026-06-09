@@ -14,8 +14,8 @@ Item {
 
     required property PopoutState popouts
 
-    implicitWidth: layout.implicitWidth + Tokens.padding.normal * 2
-    implicitHeight: layout.implicitHeight + Tokens.padding.normal * 2
+    implicitWidth: layout.implicitWidth + Tokens.padding.medium * 2
+    implicitHeight: layout.implicitHeight + Tokens.padding.medium * 2
 
     ButtonGroup {
         id: generalSinks
@@ -34,11 +34,11 @@ Item {
 
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Tokens.spacing.normal
+        spacing: Tokens.spacing.medium
 
         StyledText {
             text: qsTr("General output")
-            font.weight: 500
+            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
         }
 
         Repeater {
@@ -58,7 +58,7 @@ Item {
 
         CustomMouseArea {
             Layout.fillWidth: true
-            implicitHeight: Tokens.padding.normal * 3
+            implicitHeight: Tokens.padding.medium * 3
 
             onWheel: event => {
                 if (event.angleDelta.y > 0)
@@ -73,11 +73,7 @@ Item {
                 implicitHeight: parent.implicitHeight
 
                 value: Audio.volume
-                onMoved: Audio.setVolume(value)
-
-                Behavior on value {
-                    Anim {}
-                }
+                onInteraction: value => Audio.setVolume(value)
             }
         }
 
@@ -171,10 +167,10 @@ Item {
 
         IconTextButton {
             Layout.fillWidth: true
-            Layout.topMargin: Tokens.spacing.normal
+            Layout.topMargin: Tokens.spacing.medium
             inactiveColour: Colours.palette.m3primaryContainer
             inactiveOnColour: Colours.palette.m3onPrimaryContainer
-            verticalPadding: Tokens.padding.small
+            verticalPadding: Tokens.padding.extraSmall
             text: qsTr("Open settings")
             icon: "settings"
 
