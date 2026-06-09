@@ -15,6 +15,9 @@ Slider {
     property bool animateWave
     property real waveFrequency: 6
     property int waveDuration: 1000
+    property int radius: Tokens.rounding.medium
+    property bool interactionOnMove: true
+    readonly property bool dragging: mouse.pressed
 
     property color fgColour: enabled ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3onSurface, 0.38)
     property color bgColour: enabled ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3onSurface, 0.1)
@@ -43,7 +46,7 @@ Slider {
             implicitHeight: parent.height * (parent.height <= 12 ? opacity : Math.min(opacity * 2, 1))
             opacity: Math.min(width, 12) / 12
 
-            radius: Tokens.rounding.medium
+            radius: root.radius
             topLeftRadius: Tokens.rounding.extraSmall / 2
             bottomLeftRadius: Tokens.rounding.extraSmall / 2
             color: root.bgColour
@@ -71,9 +74,9 @@ Slider {
 
             implicitWidth: 4
             implicitHeight: {
-                const mult = parent.height <= 12 ? 3 : 1.2;
-                const pressMult = parent.height <= 12 ? 4 : 1.5;
-                return parent.height * (mouse.pressed ? pressMult : mult);
+                const t = CUtils.clamp((parent.height - 12) / 16, 0, 1);
+                const lerp = (a, b) => a + (b - a) * t;
+                return parent.height * (mouse.pressed ? lerp(3.5, 1.5) : lerp(3, 1.2));
             }
 
             radius: Tokens.rounding.full
@@ -103,7 +106,7 @@ Slider {
                 implicitWidth: root.filledWidth
                 implicitHeight: root.height
 
-                radius: Tokens.rounding.medium
+                radius: root.radius
                 topRightRadius: Tokens.rounding.extraSmall / 2
                 bottomRightRadius: Tokens.rounding.extraSmall / 2
                 color: root.fgColour
@@ -170,7 +173,8 @@ Slider {
         }
         onPositionChanged: e => {
             dragMovement = (e.x - pressStartX) / width;
-            root.interaction(posBinding.value);
+            if (root.interactionOnMove)
+                root.interaction(posBinding.value);
         }
         onReleased: e => {
             root.interaction(posBinding.value);

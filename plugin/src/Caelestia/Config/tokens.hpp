@@ -285,7 +285,7 @@ class LockTokens : public ConfigObject {
     CONFIG_PROPERTY(qreal, heightMult, 0.7)
     CONFIG_PROPERTY(qreal, ratio, 16.0 / 9.0)
     CONFIG_PROPERTY(int, centerWidth, 600)
-    CONFIG_PROPERTY(int, showWeatherDetailsHeight, 500)
+    CONFIG_PROPERTY(int, showWeatherDetailsHeight, 550)
     CONFIG_PROPERTY(int, showForecastHeight, 975)
     CONFIG_PROPERTY(int, forecastItemWidth, 51)
     CONFIG_PROPERTY(int, largeLogoWidth, 320)
@@ -311,15 +311,18 @@ public:
         : ConfigObject(parent) {}
 };
 
-class ControlCenterTokens : public ConfigObject {
+class NexusTokens : public ConfigObject {
     Q_OBJECT
     QML_ANONYMOUS
 
     CONFIG_PROPERTY(qreal, heightMult, 0.7)
     CONFIG_PROPERTY(qreal, ratio, 16.0 / 9.0)
+    CONFIG_PROPERTY(int, minWidth, 800)
+    CONFIG_PROPERTY(int, minHeight, 500)
+    CONFIG_PROPERTY(int, maxNavWidth, 600)
 
 public:
-    explicit ControlCenterTokens(QObject* parent = nullptr)
+    explicit NexusTokens(QObject* parent = nullptr)
         : ConfigObject(parent) {}
 };
 
@@ -337,7 +340,7 @@ class SizeTokens : public ConfigObject {
     CONFIG_SUBOBJECT(UtilitiesTokens, utilities)
     CONFIG_SUBOBJECT(LockTokens, lock)
     CONFIG_SUBOBJECT(WInfoTokens, winfo)
-    CONFIG_SUBOBJECT(ControlCenterTokens, controlCenter)
+    CONFIG_SUBOBJECT(NexusTokens, nexus)
 
 public:
     explicit SizeTokens(QObject* parent = nullptr)
@@ -352,7 +355,7 @@ public:
         , m_utilities(new UtilitiesTokens(this))
         , m_lock(new LockTokens(this))
         , m_winfo(new WInfoTokens(this))
-        , m_controlCenter(new ControlCenterTokens(this)) {}
+        , m_nexus(new NexusTokens(this)) {}
 };
 
 class TokenConfig : public RootConfig {

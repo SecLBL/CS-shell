@@ -39,6 +39,8 @@ StyledWindow {
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : contentItem.Config.border.thickness
 
+    property color surfaceColour: Colours.tPalette.m3surface
+
     readonly property int dragMaskPadding: {
         if (focusGrab.active || panels.popouts.isDetached)
             return 0;
@@ -74,6 +76,10 @@ StyledWindow {
 
     Behavior on fsTransitionProg {
         Anim {}
+    }
+
+    Behavior on surfaceColour {
+        CAnim {}
     }
 
     Region {
@@ -117,7 +123,7 @@ StyledWindow {
 
     StyledRect {
         anchors.fill: parent
-        opacity: visibilities.session && Config.session.enabled ? 0.5 : 0
+        opacity: (visibilities.session && Config.session.enabled) || panels.popouts.detachedMode !== "" ? 0.5 : 0
         color: Colours.palette.m3scrim
 
         Behavior on opacity {
@@ -129,7 +135,7 @@ StyledWindow {
 
     Item {
         anchors.fill: parent
-        opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
+        opacity: root.surfaceColour.a
         layer.enabled: true
         layer.effect: MultiEffect {
             shadowEnabled: true
@@ -140,12 +146,8 @@ StyledWindow {
         BlobGroup {
             id: blobGroup
 
-            color: Colours.palette.m3surface
+            color: root.surfaceColour
             smoothing: root.contentItem.Config.border.smoothing
-
-            Behavior on color {
-                CAnim {}
-            }
         }
 
         BlobInvertedRect {

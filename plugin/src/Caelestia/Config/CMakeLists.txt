@@ -15,11 +15,11 @@ qml_module(caelestia-config
         backgroundconfig.hpp
         barconfig.hpp
         borderconfig.hpp
-        controlcenterconfig.hpp
         dashboardconfig.hpp
         generalconfig.hpp
         launcherconfig.hpp
         lockconfig.hpp
+        nexusconfig.hpp
         notifsconfig.hpp
         osdconfig.hpp
         serviceconfig.hpp
