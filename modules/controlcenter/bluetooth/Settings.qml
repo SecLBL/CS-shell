@@ -16,7 +16,7 @@ ColumnLayout {
 
     required property Session session
 
-    spacing: Tokens.spacing.medium
+    spacing: Tokens.spacing.normal
 
     SettingsHeader {
         icon: "bluetooth"
@@ -24,9 +24,10 @@ ColumnLayout {
     }
 
     StyledText {
-        Layout.topMargin: Tokens.spacing.largeIncreased
+        Layout.topMargin: Tokens.spacing.large
         text: qsTr("Adapter status")
-        font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+        font.pointSize: Tokens.font.size.larger
+        font.weight: 500
     }
 
     StyledText {
@@ -36,9 +37,9 @@ ColumnLayout {
 
     StyledRect {
         Layout.fillWidth: true
-        implicitHeight: adapterStatus.implicitHeight + Tokens.padding.extraLargeIncreased
+        implicitHeight: adapterStatus.implicitHeight + Tokens.padding.large * 2
 
-        radius: Tokens.rounding.large
+        radius: Tokens.rounding.normal
         color: Colours.tPalette.m3surfaceContainer
 
         ColumnLayout {
@@ -49,7 +50,7 @@ ColumnLayout {
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: Tokens.padding.large
 
-            spacing: Tokens.spacing.large
+            spacing: Tokens.spacing.larger
 
             Toggle {
                 label: qsTr("Powered")
@@ -84,9 +85,10 @@ ColumnLayout {
     }
 
     StyledText {
-        Layout.topMargin: Tokens.spacing.largeIncreased
+        Layout.topMargin: Tokens.spacing.large
         text: qsTr("Adapter properties")
-        font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+        font.pointSize: Tokens.font.size.larger
+        font.weight: 500
     }
 
     StyledText {
@@ -96,9 +98,9 @@ ColumnLayout {
 
     StyledRect {
         Layout.fillWidth: true
-        implicitHeight: adapterSettings.implicitHeight + Tokens.padding.extraLargeIncreased
+        implicitHeight: adapterSettings.implicitHeight + Tokens.padding.large * 2
 
-        radius: Tokens.rounding.large
+        radius: Tokens.rounding.normal
         color: Colours.tPalette.m3surfaceContainer
 
         ColumnLayout {
@@ -109,11 +111,11 @@ ColumnLayout {
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: Tokens.padding.large
 
-            spacing: Tokens.spacing.large
+            spacing: Tokens.spacing.larger
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.medium
+                spacing: Tokens.spacing.normal
 
                 StyledText {
                     Layout.fillWidth: true
@@ -125,28 +127,28 @@ ColumnLayout {
 
                     property bool expanded
 
-                    implicitWidth: adapterPicker.implicitWidth + Tokens.padding.medium * 2
-                    implicitHeight: adapterPicker.implicitHeight + Tokens.padding.large
+                    implicitWidth: adapterPicker.implicitWidth + Tokens.padding.normal * 2
+                    implicitHeight: adapterPicker.implicitHeight + Tokens.padding.smaller * 2
 
                     StateLayer {
                         onClicked: {
                             adapterPickerButton.expanded = !adapterPickerButton.expanded;
                         }
 
-                        radius: Tokens.rounding.medium
+                        radius: Tokens.rounding.small
                     }
 
                     RowLayout {
                         id: adapterPicker
 
                         anchors.fill: parent
-                        anchors.margins: Tokens.padding.medium
-                        anchors.topMargin: Tokens.padding.small
-                        anchors.bottomMargin: Tokens.padding.small
-                        spacing: Tokens.spacing.medium
+                        anchors.margins: Tokens.padding.normal
+                        anchors.topMargin: Tokens.padding.smaller
+                        anchors.bottomMargin: Tokens.padding.smaller
+                        spacing: Tokens.spacing.normal
 
                         StyledText {
-                            Layout.leftMargin: Tokens.padding.extraSmall
+                            Layout.leftMargin: Tokens.padding.small
                             text: Bluetooth.defaultAdapter?.name ?? qsTr("None")
                         }
 
@@ -182,7 +184,7 @@ ColumnLayout {
                         implicitHeight: adapterPickerButton.expanded ? adapterList.implicitHeight : adapterPickerButton.implicitHeight
 
                         color: Colours.palette.m3secondaryContainer
-                        radius: Tokens.rounding.medium
+                        radius: Tokens.rounding.small
                         opacity: adapterPickerButton.expanded ? 1 : 0
                         scale: adapterPickerButton.expanded ? 1 : 0.7
 
@@ -204,7 +206,7 @@ ColumnLayout {
                                     required property BluetoothAdapter modelData
 
                                     Layout.fillWidth: true
-                                    implicitHeight: adapterInner.implicitHeight + Tokens.padding.medium * 2
+                                    implicitHeight: adapterInner.implicitHeight + Tokens.padding.normal * 2
 
                                     StateLayer {
                                         onClicked: {
@@ -221,12 +223,12 @@ ColumnLayout {
                                         anchors.left: parent.left
                                         anchors.right: parent.right
                                         anchors.verticalCenter: parent.verticalCenter
-                                        anchors.margins: Tokens.padding.medium
-                                        spacing: Tokens.spacing.medium
+                                        anchors.margins: Tokens.padding.normal
+                                        spacing: Tokens.spacing.normal
 
                                         StyledText {
                                             Layout.fillWidth: true
-                                            Layout.leftMargin: Tokens.padding.extraSmall
+                                            Layout.leftMargin: Tokens.padding.small
                                             text: adapter.modelData.name
                                             color: Colours.palette.m3onSecondaryContainer
                                         }
@@ -252,7 +254,9 @@ ColumnLayout {
                         }
 
                         Behavior on implicitHeight {
-                            Anim {}
+                            Anim {
+                                type: Anim.DefaultSpatial
+                            }
                         }
                     }
                 }
@@ -260,7 +264,7 @@ ColumnLayout {
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.medium
+                spacing: Tokens.spacing.normal
 
                 StyledText {
                     Layout.fillWidth: true
@@ -309,9 +313,6 @@ ColumnLayout {
                         PropertyChanges {
                             target: adapterNameEdit
                             padding: Tokens.padding.normal
-                            renameAdapter.implicitHeight: adapterNameEdit.implicitHeight
-                            renameLabel.opacity: 0
-                            adapterNameEdit.padding: Tokens.padding.medium
                         }
                     }
 
@@ -331,7 +332,7 @@ ColumnLayout {
 
                         text: qsTr("Rename adapter (currently does not work)")
                         color: Colours.palette.m3outline
-                        font: Tokens.font.label.small
+                        font.pointSize: Tokens.font.size.small
                     }
 
                     StyledTextField {
@@ -340,7 +341,7 @@ ColumnLayout {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: renameLabel.bottom
-                        anchors.leftMargin: root.session.bt.editingAdapterName ? 0 : -Tokens.padding.medium
+                        anchors.leftMargin: root.session.bt.editingAdapterName ? 0 : -Tokens.padding.normal
 
                         text: root.session.bt.currentAdapter?.name ?? ""
                         readOnly: !root.session.bt.editingAdapterName
@@ -348,11 +349,11 @@ ColumnLayout {
                             root.session.bt.editingAdapterName = false;
                         }
 
-                        leftPadding: Tokens.padding.medium
-                        rightPadding: Tokens.padding.medium
+                        leftPadding: Tokens.padding.normal
+                        rightPadding: Tokens.padding.normal
 
                         background: StyledRect {
-                            radius: Tokens.rounding.medium
+                            radius: Tokens.rounding.small
                             border.width: 2
                             border.color: Colours.palette.m3primary
                             opacity: root.session.bt.editingAdapterName ? 1 : 0
@@ -374,9 +375,9 @@ ColumnLayout {
 
                 StyledRect {
                     implicitWidth: implicitHeight
-                    implicitHeight: cancelEditIcon.implicitHeight + Tokens.padding.large
+                    implicitHeight: cancelEditIcon.implicitHeight + Tokens.padding.smaller * 2
 
-                    radius: Tokens.rounding.medium
+                    radius: Tokens.rounding.small
                     color: Colours.palette.m3secondaryContainer
                     opacity: root.session.bt.editingAdapterName ? 1 : 0
                     scale: root.session.bt.editingAdapterName ? 1 : 0.5
@@ -413,9 +414,9 @@ ColumnLayout {
 
                 StyledRect {
                     implicitWidth: implicitHeight
-                    implicitHeight: editIcon.implicitHeight + Tokens.padding.large
+                    implicitHeight: editIcon.implicitHeight + Tokens.padding.smaller * 2
 
-                    radius: root.session.bt.editingAdapterName ? Tokens.rounding.medium : implicitHeight / 2 * Math.min(1, Tokens.rounding.scale)
+                    radius: root.session.bt.editingAdapterName ? Tokens.rounding.small : implicitHeight / 2 * Math.min(1, Tokens.rounding.scale)
                     color: Qt.alpha(Colours.palette.m3primary, root.session.bt.editingAdapterName ? 1 : 0)
 
                     StateLayer {
@@ -448,9 +449,10 @@ ColumnLayout {
     }
 
     StyledText {
-        Layout.topMargin: Tokens.spacing.largeIncreased
+        Layout.topMargin: Tokens.spacing.large
         text: qsTr("Adapter information")
-        font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+        font.pointSize: Tokens.font.size.larger
+        font.weight: 500
     }
 
     StyledText {
@@ -460,9 +462,9 @@ ColumnLayout {
 
     StyledRect {
         Layout.fillWidth: true
-        implicitHeight: adapterInfo.implicitHeight + Tokens.padding.extraLargeIncreased
+        implicitHeight: adapterInfo.implicitHeight + Tokens.padding.large * 2
 
-        radius: Tokens.rounding.large
+        radius: Tokens.rounding.normal
         color: Colours.tPalette.m3surfaceContainer
 
         ColumnLayout {
@@ -473,7 +475,7 @@ ColumnLayout {
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: Tokens.padding.large
 
-            spacing: Tokens.spacing.extraSmall
+            spacing: Tokens.spacing.small / 2
 
             StyledText {
                 text: qsTr("Adapter state")
@@ -482,29 +484,29 @@ ColumnLayout {
             StyledText {
                 text: Bluetooth.defaultAdapter ? BluetoothAdapterState.toString(Bluetooth.defaultAdapter.state) : qsTr("Unknown")
                 color: Colours.palette.m3outline
-                font: Tokens.font.body.small
+                font.pointSize: Tokens.font.size.small
             }
 
             StyledText {
-                Layout.topMargin: Tokens.spacing.medium
+                Layout.topMargin: Tokens.spacing.normal
                 text: qsTr("Dbus path")
             }
 
             StyledText {
                 text: Bluetooth.defaultAdapter?.dbusPath ?? ""
                 color: Colours.palette.m3outline
-                font: Tokens.font.body.small
+                font.pointSize: Tokens.font.size.small
             }
 
             StyledText {
-                Layout.topMargin: Tokens.spacing.medium
+                Layout.topMargin: Tokens.spacing.normal
                 text: qsTr("Adapter id")
             }
 
             StyledText {
                 text: Bluetooth.defaultAdapter?.adapterId ?? ""
                 color: Colours.palette.m3outline
-                font: Tokens.font.body.small
+                font.pointSize: Tokens.font.size.small
             }
         }
     }
@@ -515,7 +517,7 @@ ColumnLayout {
         property alias toggle: toggle
 
         Layout.fillWidth: true
-        spacing: Tokens.spacing.medium
+        spacing: Tokens.spacing.normal
 
         StyledText {
             Layout.fillWidth: true

@@ -78,9 +78,9 @@ Item {
         }
 
         StyledText {
-            Layout.topMargin: Tokens.spacing.smaller
+            Layout.topMargin: Tokens.spacing.medium
             text: qsTr("Chat output")
-            font.weight: 500
+            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
         }
 
         Repeater {
@@ -98,7 +98,7 @@ Item {
 
         CustomMouseArea {
             Layout.fillWidth: true
-            implicitHeight: Tokens.padding.normal * 3
+            implicitHeight: Tokens.padding.medium * 3
 
             onWheel: event => {
                 if (event.angleDelta.y > 0)
@@ -122,9 +122,9 @@ Item {
         }
 
         StyledText {
-            Layout.topMargin: Tokens.spacing.smaller
+            Layout.topMargin: Tokens.spacing.medium
             text: qsTr("Mic input")
-            font.weight: 500
+            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
         }
 
         Repeater {
@@ -142,7 +142,7 @@ Item {
 
         CustomMouseArea {
             Layout.fillWidth: true
-            implicitHeight: Tokens.padding.normal * 3
+            implicitHeight: Tokens.padding.medium * 3
 
             onWheel: event => {
                 if (event.angleDelta.y > 0)
