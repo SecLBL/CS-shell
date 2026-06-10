@@ -113,7 +113,7 @@ Item {
                 implicitHeight: parent.implicitHeight
 
                 value: Audio.chatVolume
-                onMoved: Audio.setChatVolume(value)
+                onInteraction: value => Audio.setChatVolume(value)
             }
         }
 
@@ -153,7 +153,7 @@ Item {
                 implicitHeight: parent.implicitHeight
 
                 value: Audio.micVolume
-                onMoved: Audio.setMicVolume(value)
+                onInteraction: value => Audio.setMicVolume(value)
             }
         }
 
