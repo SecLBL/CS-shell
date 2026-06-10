@@ -20,7 +20,10 @@ PageBase {
         gr: 0.000251, mk: 1.41254, at: 2.92, rt: 100, hold: 171
     })
 
-    property bool nrEnabled: true
+    property var nrState: ({
+        enabled: 1,
+        attenuation: 100
+    })
 
     function linToDb(v: real): real {
         return 20 * Math.log10(Math.max(v, 0.000001));
@@ -78,11 +81,15 @@ PageBase {
         return pts;
     }
 
-    function setNrEnabled(val: bool): void {
-        nrEnabled = val;
-        nrParamProc.command = ["bash", "-c", 'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-nr-bypass.sh" "$@"', "0", "mic-nr", val ? "1" : "0"];
-        nrParamProc.running = false;
-        nrParamProc.running = true;
+    property var pendingNrParams: ({})
+
+    function setNrParam(symbol: string, value: real): void {
+        nrState = Object.assign({}, nrState, {
+            [symbol]: value
+        });
+        pendingNrParams[symbol] = value;
+        if (!nrFlushTimer.running)
+            nrFlushTimer.start();
     }
 
     Component.onCompleted: {
@@ -137,11 +144,11 @@ PageBase {
         Process {
             id: nrLoadProc
 
-            command: ["bash", "-c", 'jq -c "{mic_nr: (.mic_nr // 1)}" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/routing.json" 2>/dev/null || echo "{\\"mic_nr\\":1}"']
+            command: ["bash", "-c", 'jq -c ".[\\"mic-nr\\"].params // {}" "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/runtime/audio.json"']
             stdout: SplitParser {
                 onRead: line => {
                     try {
-                        root.nrEnabled = JSON.parse(line).mic_nr === 1;
+                        root.nrState = Object.assign({}, root.nrState, JSON.parse(line));
                     } catch (e) {}
                 }
             }
@@ -149,6 +156,27 @@ PageBase {
 
         Process {
             id: nrParamProc
+        }
+
+        Timer {
+            id: nrFlushTimer
+
+            interval: 80
+            onTriggered: {
+                if (nrParamProc.running) {
+                    restart();
+                    return;
+                }
+                const entries = Object.entries(root.pendingNrParams);
+                if (entries.length === 0)
+                    return;
+                root.pendingNrParams = {};
+                let script = 'P="${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh"';
+                for (const [sym, val] of entries)
+                    script += '; bash "$P" mic-nr ' + sym + ' ' + String(val);
+                nrParamProc.command = ["bash", "-c", script];
+                nrParamProc.running = true;
+            }
         }
 
         StyledText {
@@ -307,11 +335,24 @@ PageBase {
         ToggleRow {
             Layout.fillWidth: true
             first: true
-            last: true
             text: qsTr("Enabled")
-            subtext: qsTr("RNNoise — neural network based noise suppression")
-            checked: root.nrEnabled
-            onToggled: root.setNrEnabled(checked)
+            subtext: qsTr("DeepFilterNet — deep learning noise suppression")
+            checked: root.nrState.enabled > 0.5
+            onToggled: root.setNrParam("enabled", checked ? 1 : 0)
+        }
+
+        ParamSlider {
+            Layout.fillWidth: true
+            last: true
+            label: qsTr("Attenuation limit")
+            from: 0
+            to: 100
+            decimals: 0
+            unit: " dB"
+            enabled: root.nrState.enabled > 0.5
+            opacity: enabled ? 1 : 0.4
+            paramValue: root.nrState.attenuation
+            onChanged: v => root.setNrParam("attenuation", Math.round(v))
         }
 
         CompressorControls {

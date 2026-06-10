@@ -60,12 +60,8 @@ Singleton {
         "MixBusChat.input", "MixBusChat.output",
         "VirtualCable.input", "VirtualCable.output",
         "mic_chain_in", "mic_chain_out",
-        "mic_chain_internal_in", "mic_chain_internal_out",
         "chat_chain_in", "chat_chain_out",
-        "chat_chain_internal_in", "chat_chain_internal_out",
-        "general_chain_in", "general_chain_out",
-        "general_chain_internal_in", "general_chain_internal_out",
-        "mic-gate", "mic-nr", "mic-comp", "chat-nr", "chat-comp", "general-eq"
+        "general_chain_in", "general_chain_out"
     ])
 
     readonly property bool muted: !!generalChainOutNode?.audio?.muted
