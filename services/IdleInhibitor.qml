@@ -51,14 +51,6 @@ Singleton {
         }
     }
 
-
-    // Fallback
-    Process {
-        running: root.enabled
-        command: ["systemd-inhibit", "--what=sleep:idle", "--mode=block",
-                  "--who=Caelestia", "--why=Keep Awake", "tail", "-f", "/dev/null"]
-    }
-
     IpcHandler {
         function isEnabled(): bool {
             return root.enabled;

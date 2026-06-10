@@ -42,7 +42,10 @@ Scope {
         IdleMonitor {
             required property var modelData
 
-            enabled: root.enabled && (modelData.enabled ?? true)
+            // Gate on IdleInhibitor directly instead of relying solely on
+            // respectInhibitors: the Wayland inhibitor may fail to register
+            // when keep-awake is restored on startup, before the surface exists.
+            enabled: root.enabled && (modelData.enabled ?? true) && !(respectInhibitors && IdleInhibitor.enabled)
             timeout: modelData.timeout
             respectInhibitors: modelData.respectInhibitors ?? true
             onIsIdleChanged: root.handleIdleAction(isIdle ? modelData.idleAction : modelData.returnAction)
