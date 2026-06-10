@@ -109,13 +109,69 @@ ColumnLayout {
         return Math.pow(10, db / 20);
     }
 
+    property var pendingParams: ({})
+
+    // State updates immediately, script writes are batched and flushed
+    // sequentially: audio-param.sh does a jq read-modify-write on
+    // audio.json, so concurrent invocations during dragging would race.
     function setParam(symbol: string, value: real): void {
         compState = Object.assign({}, compState, {
             [symbol]: value
         });
-        paramProc.command = ["bash", "-c", 'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"', "0", plugin, symbol, String(value)];
-        paramProc.running = false;
-        paramProc.running = true;
+        pendingParams[symbol] = value;
+        if (!flushTimer.running)
+            flushTimer.start();
+    }
+
+    // Static transfer curve (in -> out, dB) of the compressor without
+    // makeup and dry/wet. Approximation of the LSP curve: time constants
+    // and sidechain are ignored.
+    function curveBaseAt(xDb: real): real {
+        const st = compState;
+        const T = linToDb(st.al);
+        const R = Math.max(st.cr, 1);
+        const W = Math.max(0.01, -linToDb(st.kn));
+        const mode = Math.round(st.cm);
+
+        if (mode === 0) {
+            // Downward: attenuate above the threshold
+            if (xDb < T - W / 2)
+                return xDb;
+            if (xDb > T + W / 2)
+                return T + (xDb - T) / R;
+            return xDb + (1 / R - 1) * Math.pow(xDb - T + W / 2, 2) / (2 * W);
+        }
+
+        // Upward/boosting: raise levels below the threshold
+        let boost = 0;
+        if (xDb < T - W / 2)
+            boost = (T - xDb) * (1 - 1 / R);
+        else if (xDb < T + W / 2)
+            boost = (1 - 1 / R) * Math.pow(T + W / 2 - xDb, 2) / (2 * W);
+        if (mode === 2)
+            boost = Math.min(boost, Math.max(0, linToDb(compState.bsa)));
+        return xDb + boost;
+    }
+
+    function curveAt(xDb: real): real {
+        let y = curveBaseAt(xDb) + linToDb(compState.mk);
+        const w = Math.max(0, Math.min(1, compState.cdw / 100));
+        if (w < 1)
+            y = 20 * Math.log10((1 - w) * Math.pow(10, xDb / 20) + w * Math.pow(10, y / 20));
+        return y;
+    }
+
+    readonly property var curveDb: {
+        const st = compState;
+        const pts = [];
+        for (let i = 0; i <= 100; i++) {
+            const x = -80 + i * 0.8;
+            pts.push({
+                x: x,
+                y: curveAt(x)
+            });
+        }
+        return pts;
     }
 
     Component.onCompleted: loadProc.running = true
@@ -137,10 +193,51 @@ ColumnLayout {
         id: paramProc
     }
 
+    Timer {
+        id: flushTimer
+
+        interval: 80
+        onTriggered: {
+            if (paramProc.running) {
+                restart();
+                return;
+            }
+            const entries = Object.entries(root.pendingParams);
+            if (entries.length === 0)
+                return;
+            root.pendingParams = {};
+            let script = 'P="${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh"';
+            for (const [sym, val] of entries)
+                script += '; bash "$P" ' + root.plugin + ' ' + sym + ' ' + String(val);
+            paramProc.command = ["bash", "-c", script];
+            paramProc.running = true;
+        }
+    }
+
     spacing: Tokens.spacing.extraSmall / 2
 
     SectionHeader {
         text: qsTr("Compressor")
+    }
+
+    TransferGraph {
+        Layout.fillWidth: true
+        active: root.compState.enabled > 0.5
+        curveDb: root.curveDb
+        nodeXDb: root.linToDb(root.compState.al)
+        nodeYDb: root.curveAt(root.linToDb(root.compState.al))
+
+        onNodeMoved: (xDb, yDb) => {
+            const t = Math.max(-60, Math.min(0, xDb));
+            root.setParam("al", root.dbToLin(t));
+            // Vertical drag sets the makeup gain relative to the makeup-free curve
+            const mk = Math.max(-40, Math.min(40, yDb - root.curveBaseAt(t)));
+            root.setParam("mk", root.dbToLin(mk));
+        }
+        onNodeScrolled: up => {
+            const cr = Math.max(1, Math.min(100, root.compState.cr * (up ? 1.08 : 1 / 1.08)));
+            root.setParam("cr", Math.round(cr * 10) / 10);
+        }
     }
 
     ToggleRow {
@@ -276,7 +373,7 @@ ColumnLayout {
         onChanged: v => root.setParam("cdw", Math.round(v))
     }
 
-    SectionHeader {
+    SubsectionHeader {
         text: qsTr("Sidechain")
     }
 
@@ -337,7 +434,7 @@ ColumnLayout {
         onChanged: v => root.setParam("scp", root.dbToLin(v))
     }
 
-    SectionHeader {
+    SubsectionHeader {
         text: qsTr("Sidechain filters")
     }
 
@@ -387,7 +484,7 @@ ColumnLayout {
         onChanged: v => root.setParam("slpf", Math.round(v))
     }
 
-    SectionHeader {
+    SubsectionHeader {
         text: qsTr("Boost (Boot mode)")
     }
 

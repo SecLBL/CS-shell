@@ -30,13 +30,52 @@ PageBase {
         return Math.pow(10, db / 20);
     }
 
+    property var pendingGateParams: ({})
+
+    // State updates immediately, script writes are batched and flushed
+    // sequentially (audio-param.sh does a jq read-modify-write on
+    // audio.json, concurrent invocations during dragging would race).
     function setGateParam(symbol: string, value: real): void {
         gateState = Object.assign({}, gateState, {
             [symbol]: value
         });
-        gateParamProc.command = ["bash", "-c", 'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" "$@"', "0", "mic-gate", symbol, String(value)];
-        gateParamProc.running = false;
-        gateParamProc.running = true;
+        pendingGateParams[symbol] = value;
+        if (!gateFlushTimer.running)
+            gateFlushTimer.start();
+    }
+
+    // Static gate transfer curve (in -> out, dB). Approximation: attack,
+    // hold and release are ignored.
+    function gateCurveAt(xDb: real): real {
+        const st = gateState;
+        const t = linToDb(st.gt);
+        const zone = Math.max(0.5, -linToDb(st.gz));
+        const floor = linToDb(st.gr);
+        const makeup = linToDb(st.mk);
+
+        let reduction;
+        if (xDb >= t)
+            reduction = 0;
+        else if (xDb <= t - zone)
+            reduction = floor;
+        else {
+            const k = (t - xDb) / zone;
+            reduction = floor * k * k * (3 - 2 * k);
+        }
+        return xDb + reduction + makeup;
+    }
+
+    readonly property var gateCurveDb: {
+        const st = gateState;
+        const pts = [];
+        for (let i = 0; i <= 100; i++) {
+            const x = -80 + i * 0.8;
+            pts.push({
+                x: x,
+                y: gateCurveAt(x)
+            });
+        }
+        return pts;
     }
 
     function setNrEnabled(val: bool): void {
@@ -74,6 +113,27 @@ PageBase {
             id: gateParamProc
         }
 
+        Timer {
+            id: gateFlushTimer
+
+            interval: 80
+            onTriggered: {
+                if (gateParamProc.running) {
+                    restart();
+                    return;
+                }
+                const entries = Object.entries(root.pendingGateParams);
+                if (entries.length === 0)
+                    return;
+                root.pendingGateParams = {};
+                let script = 'P="${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh"';
+                for (const [sym, val] of entries)
+                    script += '; bash "$P" mic-gate ' + sym + ' ' + String(val);
+                gateParamProc.command = ["bash", "-c", script];
+                gateParamProc.running = true;
+            }
+        }
+
         Process {
             id: nrLoadProc
 
@@ -95,7 +155,7 @@ PageBase {
             Layout.fillWidth: true
             Layout.leftMargin: Tokens.padding.small
             Layout.bottomMargin: Tokens.spacing.medium
-            text: qsTr("Processing chain applied to the microphone signal: gate, noise reduction and compressor.")
+            text: qsTr("Processing chain applied to the microphone signal: gate, noise reduction and compressor. Drag the node on a curve to set threshold and depth/makeup, scroll over it to adjust zone or ratio.")
             color: Colours.palette.m3outline
             font: Tokens.font.body.small
             wrapMode: Text.WordWrap
@@ -104,6 +164,27 @@ PageBase {
         SectionHeader {
             first: true
             text: qsTr("Gate")
+        }
+
+        TransferGraph {
+            Layout.fillWidth: true
+            active: root.gateState.enabled > 0.5
+            curveDb: root.gateCurveDb
+            nodeXDb: root.linToDb(root.gateState.gt)
+            nodeYDb: root.linToDb(root.gateState.gt) + root.linToDb(root.gateState.gr) + root.linToDb(root.gateState.mk)
+            hystXDb: root.gateState.gh > 0.5 ? root.linToDb(root.gateState.ht) : NaN
+
+            onNodeMoved: (xDb, yDb) => {
+                const t = Math.max(-60, Math.min(0, xDb));
+                root.setGateParam("gt", root.dbToLin(t));
+                // Vertical drag sets the gate floor (depth of the cut below the threshold)
+                const floor = Math.max(-80, Math.min(0, yDb - t - root.linToDb(root.gateState.mk)));
+                root.setGateParam("gr", root.dbToLin(floor));
+            }
+            onNodeScrolled: up => {
+                const gz = Math.max(0.001, Math.min(1, root.gateState.gz * (up ? 1.08 : 1 / 1.08)));
+                root.setGateParam("gz", Math.round(gz * 1000) / 1000);
+            }
         }
 
         ToggleRow {

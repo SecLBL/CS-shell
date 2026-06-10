@@ -52,7 +52,7 @@ PageBase {
             Layout.fillWidth: true
             Layout.leftMargin: Tokens.padding.small
             Layout.bottomMargin: Tokens.spacing.medium
-            text: qsTr("Processing chain applied to the chat output: noise reduction and compressor.")
+            text: qsTr("Processing chain applied to the chat output: noise reduction and compressor. Drag the node on the curve to set threshold and makeup, scroll over it to adjust the ratio.")
             color: Colours.palette.m3outline
             font: Tokens.font.body.small
             wrapMode: Text.WordWrap
