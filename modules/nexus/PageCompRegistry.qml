@@ -68,6 +68,18 @@ QtObject {
                 Component {
                     AppVolumes {}
                 }
+                Component {
+                    ProcessingPage {}
+                }
+                Component {
+                    EqualizerPage {}
+                }
+                Component {
+                    MicProcessingPage {}
+                }
+                Component {
+                    ChatProcessingPage {}
+                }
             }
         },
 
