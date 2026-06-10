@@ -157,21 +157,27 @@ Singleton {
         audioRouteProc.running = true;
     }
 
+    // The saved* properties must follow every selection: tryRestoreRouting()
+    // runs on each PipeWire node change (streams appearing/disappearing) and
+    // would otherwise re-route back to the device loaded at startup.
     function setGeneralOutput(device: PwNode): void {
         const old = generalOutputDevice?.name ?? "";
         generalOutputDevice = device;
+        savedGeneralOutput = device.name;
         _runRoute("general", device.name, old);
     }
 
     function setChatOutput(device: PwNode): void {
         const old = chatOutputDevice?.name ?? "";
         chatOutputDevice = device;
+        savedChatOutput = device.name;
         _runRoute("chat", device.name, old);
     }
 
     function setMicInput(device: PwNode): void {
         const old = micInputDevice?.name ?? "";
         micInputDevice = device;
+        savedMicInput = device.name;
         _runRoute("mic", device.name, old);
     }
 
