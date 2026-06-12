@@ -32,6 +32,17 @@ Item {
                 font: Tokens.font.title.medium
             }
 
+            IconButton {
+                type: IconButton.Text
+                icon: "picture_in_picture"
+                font: Tokens.font.icon.small
+                checked: CassetteState.open
+                onClicked: {
+                    CassetteState.screenName = (QsWindow.window as QsWindow)?.screen?.name ?? "";
+                    CassetteState.open = !CassetteState.open;
+                }
+            }
+
             LyricsInfo {}
         }
 

@@ -24,6 +24,7 @@ Item {
     }
 
     readonly property real fadeAmount: 0.1
+    property font lyricFont: Tokens.font.body.medium
     property bool flag
     property list<string> lyricList: Lyrics.lyrics
 
@@ -268,7 +269,7 @@ Item {
 
             text: modelData || ". . ."
             color: ListView.isCurrentItem ? Colours.palette.m3primary : mouse.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3outline
-            font: Tokens.font.body.medium
+            font: root.lyricFont
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
 
             layer.enabled: effectScale > 0
