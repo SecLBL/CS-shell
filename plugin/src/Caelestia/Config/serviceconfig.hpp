@@ -33,6 +33,12 @@ class ServiceConfig : public ConfigObject {
     CONFIG_GLOBAL_PROPERTY(QVariantList, playerAliases,
         { vmap({ { u"from"_s, u"com.github.th_ch.youtube_music"_s }, { u"to"_s, u"YT Music"_s } }) })
     CONFIG_GLOBAL_PROPERTY(QString, lyricsBackend, u"Auto"_s)
+    // Players whose identity forces the cassette popout into video/audio mode
+    CONFIG_GLOBAL_PROPERTY(QVariantList, cassetteVideoPlayers,
+        QVariantList{ u"mpv"_s, u"vlc"_s, u"celluloid"_s, u"haruna"_s, u"totem"_s, u"freetube"_s })
+    CONFIG_GLOBAL_PROPERTY(QVariantList, cassetteAudioPlayers,
+        QVariantList{ u"spotify"_s, u"youtube music"_s, u"tidal"_s, u"feishin"_s, u"supersonic"_s, u"elisa"_s,
+            u"strawberry"_s, u"amberol"_s })
 
 public:
     explicit ServiceConfig(QObject* parent = nullptr)
