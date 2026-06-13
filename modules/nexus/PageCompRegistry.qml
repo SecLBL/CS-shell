@@ -10,6 +10,7 @@ import qs.modules.nexus.pages
 import qs.modules.nexus.pages.audio
 import qs.modules.nexus.pages.bluetooth
 import qs.modules.nexus.pages.panels
+import qs.modules.nexus.pages.chromashell
 import qs.modules.nexus.pages.wallandstyle
 import qs.modules.nexus.pages.panels.taskbar
 
@@ -142,6 +143,72 @@ QtObject {
             StackPage {
                 Component {
                     LanguageAndRegion {}
+                }
+            }
+        },
+
+        // ChromaShell
+        Component {
+            // ChromaShell Extras
+            StackPage {
+                Component {
+                    CsExtrasRootPage {}
+                }
+                Component {
+                    CsAppearancePage {}
+                }
+                Component {
+                    CsGeneralPage {}
+                }
+                Component {
+                    CsBackgroundPage {}
+                }
+                Component {
+                    CsBarPage {}
+                }
+                Component {
+                    CsBorderPage {}
+                }
+                Component {
+                    CsDashboardPage {}
+                }
+                Component {
+                    CsLauncherPage {}
+                }
+                Component {
+                    CsLockPage {}
+                }
+                Component {
+                    CsNexusPage {}
+                }
+                Component {
+                    CsNotifsPage {}
+                }
+                Component {
+                    CsOsdPage {}
+                }
+                Component {
+                    CsServicesPage {}
+                }
+                Component {
+                    CsSessionPage {}
+                }
+                Component {
+                    CsSidebarPage {}
+                }
+                Component {
+                    CsUtilitiesPage {}
+                }
+                Component {
+                    CsPathsPage {}
+                }
+
+                // Deep sub-pages
+                Component {
+                    CsFontsPage {}
+                }
+                Component {
+                    CsBarWorkspacesPage {}
                 }
             }
         },

@@ -76,6 +76,14 @@ QtObject {
             category: "shell"
         },
 
+        // ChromaShell
+        {
+            label: qsTr("ChromaShell Extras"),
+            icon: "instant_mix",
+            description: qsTr("Every shell.json option in one place"),
+            category: "chromashell"
+        },
+
         // About
         {
             label: qsTr("About"),
