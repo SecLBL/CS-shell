@@ -26,7 +26,6 @@ PageBase {
         }
 
         SliderRow {
-            Layout.fillWidth: true
             first: true
             icon: Icons.getVolumeIcon(Audio.volume, Audio.muted)
             label: qsTr("Volume")
@@ -37,7 +36,6 @@ PageBase {
         }
 
         ToggleRow {
-            Layout.fillWidth: true
             text: qsTr("Muted")
             checked: Audio.muted
             onToggled: Audio.setStreamMuted(Audio.generalChainOutNode, checked)
@@ -58,7 +56,6 @@ PageBase {
         }
 
         SliderRow {
-            Layout.fillWidth: true
             first: true
             icon: Icons.getVolumeIcon(Audio.chatVolume, Audio.chatMuted)
             label: qsTr("Volume")
@@ -69,7 +66,6 @@ PageBase {
         }
 
         ToggleRow {
-            Layout.fillWidth: true
             text: qsTr("Muted")
             checked: Audio.chatMuted
             onToggled: Audio.setStreamMuted(Audio.chatChainOutNode, checked)
@@ -138,7 +134,7 @@ PageBase {
 
                 MaterialIcon {
                     text: "tune"
-                    font: Tokens.font.icon.medium
+                    fontStyle: Tokens.font.icon.medium
                 }
 
                 ColumnLayout {
@@ -165,7 +161,7 @@ PageBase {
                 MaterialIcon {
                     text: "chevron_right"
                     color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.icon.medium
+                    fontStyle: Tokens.font.icon.medium
                 }
             }
         }
