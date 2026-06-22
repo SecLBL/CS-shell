@@ -84,12 +84,15 @@ Singleton {
     }
 
     function reloadHyprRules(): void {
+        // Low fixed threshold keeps the panel drop shadow in the blur (halo glow).
+        // Fixed, not transparency.base-derived, so dark and light mode match.
+        const ignoreAlpha = 0.05;
         if (Hypr.usingLua) {
             const rule = `eval hl.layer_rule({ match = { namespace = "caelestia-drawers" }, %1 })`;
-            Hypr.extras.batchMessage([rule.arg(`blur = ${blur.enabled}`), rule.arg(`ignore_alpha = ${transparency.base - 0.03}`)]);
+            Hypr.extras.batchMessage([rule.arg(`blur = ${blur.enabled}`), rule.arg(`ignore_alpha = ${ignoreAlpha}`)]);
         } else {
             const str = "keyword layerrule %1 %2, match:namespace caelestia-drawers";
-            Hypr.extras.batchMessage([str.arg("blur").arg(blur.enabled ? 1 : 0), str.arg("ignore_alpha").arg(transparency.base - 0.03)]);
+            Hypr.extras.batchMessage([str.arg("blur").arg(blur.enabled ? 1 : 0), str.arg("ignore_alpha").arg(ignoreAlpha)]);
         }
     }
 
