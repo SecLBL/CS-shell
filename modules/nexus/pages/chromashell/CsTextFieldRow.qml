@@ -49,7 +49,7 @@ ConnectedRect {
             }
         }
 
-        StyledInputField {
+        StyledTextField {
             id: field
 
             Layout.preferredWidth: root.fieldWidth
@@ -64,7 +64,7 @@ ConnectedRect {
                 target: field
                 property: "text"
                 value: root.value
-                when: !field.hasFocus
+                when: !field.activeFocus
             }
         }
     }

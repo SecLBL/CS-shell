@@ -78,7 +78,7 @@ ConnectedRect {
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.small
 
-                StyledInputField {
+                StyledTextField {
                     id: entryField
 
                     Layout.fillWidth: true
@@ -96,7 +96,7 @@ ConnectedRect {
                         target: entryField
                         property: "text"
                         value: String(root.values[entryRow.index] ?? "")
-                        when: !entryField.hasFocus
+                        when: !entryField.activeFocus
                     }
                 }
 

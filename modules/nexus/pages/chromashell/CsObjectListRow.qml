@@ -208,16 +208,16 @@ ConnectedRect {
                                 onToggled: card.setField(fieldRow.modelData.key, checked)
                             }
 
-                            CustomSpinBox {
+                            StyledSpinBox {
                                 visible: fieldRow.modelData.type === "int" || fieldRow.modelData.type === "real"
-                                min: fieldRow.modelData.from ?? 0
-                                max: fieldRow.modelData.to ?? 9999
-                                step: fieldRow.modelData.step ?? 1
+                                from: fieldRow.modelData.from ?? 0
+                                to: fieldRow.modelData.to ?? 9999
+                                stepSize: fieldRow.modelData.step ?? 1
                                 value: Number(fieldRow.fieldValue ?? 0)
-                                onValueModified: v => card.setField(fieldRow.modelData.key, fieldRow.modelData.type === "int" ? Math.round(v) : v)
+                                onValueModified: card.setField(fieldRow.modelData.key, fieldRow.modelData.type === "int" ? Math.round(value) : value)
                             }
 
-                            StyledInputField {
+                            StyledTextField {
                                 id: textField
 
                                 readonly property string serialised: {
@@ -248,7 +248,7 @@ ConnectedRect {
                                     target: textField
                                     property: "text"
                                     value: textField.serialised
-                                    when: !textField.hasFocus
+                                    when: !textField.activeFocus
                                 }
                             }
 
