@@ -87,13 +87,15 @@ Singleton {
         // Low fixed threshold keeps the panel drop shadow in the blur (halo glow).
         // Fixed, not transparency.base-derived, so dark and light mode match.
         const ignoreAlpha = 0.05;
+        let rule, blurEnabled;
         if (Hypr.usingLua) {
-            const rule = `eval hl.layer_rule({ match = { namespace = "caelestia-drawers" }, %1 })`;
-            Hypr.extras.batchMessage([rule.arg(`blur = ${blur.enabled}`), rule.arg(`ignore_alpha = ${ignoreAlpha}`)]);
+            rule = `eval hl.layer_rule({ match = { namespace = "caelestia-drawers" }, %1 = %2 })`;
+            blurEnabled = blur.enabled;
         } else {
-            const str = "keyword layerrule %1 %2, match:namespace caelestia-drawers";
-            Hypr.extras.batchMessage([str.arg("blur").arg(blur.enabled ? 1 : 0), str.arg("ignore_alpha").arg(ignoreAlpha)]);
+            rule = "keyword layerrule %1 %2, match:namespace caelestia-drawers";
+            blurEnabled = blur.enabled ? 1 : 0;
         }
+        Hypr.extras.batchMessage([rule.arg("blur").arg(blurEnabled), rule.arg("ignore_alpha").arg(ignoreAlpha)]);
     }
 
     function requestReloadHyprRules(): void {
@@ -151,7 +153,7 @@ Singleton {
     component Transparency: QtObject {
         readonly property bool enabled: Tokens.transparency.enabled
         readonly property real base: Math.max(0, Math.min(1, Tokens.transparency.base - (root.light ? 0.1 : 0)))
-        readonly property real layers: Tokens.transparency.layers
+        readonly property real layers: Math.max(0, Math.min(1, Tokens.transparency.layers))
 
         onEnabledChanged: {
             if (enabled)

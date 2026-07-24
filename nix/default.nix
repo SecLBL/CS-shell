@@ -7,7 +7,6 @@
   fish,
   ddcutil,
   brightnessctl,
-  app2unit,
   networkmanager,
   lm_sensors,
   swappy,
@@ -36,12 +35,13 @@
 }: let
   version = "1.0.0";
 
+  qs = quickshell.withModules [qt6.qtimageformats];
+
   runtimeDeps =
     [
       fish
       ddcutil
       brightnessctl
-      app2unit
       networkmanager
       lm_sensors
       swappy
@@ -136,7 +136,7 @@ in
     src = ./..;
 
     nativeBuildInputs = [cmake ninja makeWrapper qt6.wrapQtAppsHook];
-    buildInputs = [quickshell extras plugin m3shapesModule xkeyboard-config qt6.qtbase];
+    buildInputs = [qs extras plugin m3shapesModule xkeyboard-config qt6.qtbase];
     propagatedBuildInputs = runtimeDeps;
 
     cmakeFlags =
@@ -151,10 +151,12 @@ in
     prePatch = ''
       substituteInPlace assets/pam.d/fprint \
         --replace-fail pam_fprintd.so /run/current-system/sw/lib/security/pam_fprintd.so
+      substituteInPlace assets/pam.d/howdy \
+        --replace-fail pam_howdy.so /run/current-system/sw/lib/security/pam_howdy.so
     '';
 
     postInstall = ''
-      makeWrapper ${quickshell}/bin/qs $out/bin/caelestia-shell \
+      makeWrapper ${qs}/bin/qs $out/bin/caelestia-shell \
       	--prefix PATH : "${lib.makeBinPath runtimeDeps}" \
       	--set FONTCONFIG_FILE "${fontconfig}" \
       	--set CAELESTIA_LIB_DIR ${extras}/lib \
@@ -163,9 +165,6 @@ in
 
       mkdir -p $out/lib
       ln -s ${extras}/lib/* $out/lib/
-
-      # Ensure wrap_term_launch.sh is executable
-      chmod 755 $out/share/caelestia-shell/assets/wrap_term_launch.sh
     '';
 
     passthru = {

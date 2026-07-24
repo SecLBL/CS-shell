@@ -217,6 +217,51 @@ Singleton {
         return stream.properties["application.name"] || stream.description || stream.name || qsTr("Unknown Application");
     }
 
+    function refreshNodes(): void {
+        const newSinks = [];
+        const newSources = [];
+        const newStreams = [];
+        let foundGenChain = false, foundChatChain = false, foundMicChainIn = false;
+
+        for (const node of Pipewire.nodes.values) {
+            if (node.name === "general_chain_out") {
+                if (root.generalChainOutNode !== null && root.generalChainOutNode !== node)
+                    root.generalOutputDevice = null;
+                root.generalChainOutNode = node; foundGenChain = true;
+            }
+            if (node.name === "chat_chain_out") {
+                if (root.chatChainOutNode !== null && root.chatChainOutNode !== node)
+                    root.chatOutputDevice = null;
+                root.chatChainOutNode = node; foundChatChain = true;
+            }
+            if (node.name === "mic_chain_out")  root.micChainOutNode = node;
+            if (node.name === "mic_chain_in") {
+                if (root.micChainInNode !== null && root.micChainInNode !== node)
+                    root.micInputDevice = null;
+                root.micChainInNode = node; foundMicChainIn = true;
+            }
+            if (root.chromashellNodeNames.has(node.name))
+                continue;
+            if (!node.isStream) {
+                if (node.isSink)
+                    newSinks.push(node);
+                else if (node.audio)
+                    newSources.push(node);
+            } else if (node.audio) {
+                newStreams.push(node);
+            }
+        }
+
+        if (!foundGenChain)   { root.generalChainOutNode = null; root.generalOutputDevice = null; }
+        if (!foundChatChain)  { root.chatChainOutNode    = null; root.chatOutputDevice    = null; }
+        if (!foundMicChainIn) { root.micChainInNode      = null; root.micInputDevice      = null; }
+
+        root.sinks = newSinks;
+        root.sources = newSources;
+        root.streams = newStreams;
+        root.tryRestoreRouting();
+    }
+
     onSinkChanged: {
         if (!sink?.ready)
             return;
@@ -241,7 +286,10 @@ Singleton {
         previousSourceName = newSourceName;
     }
 
+    // Populate immediately: Pipewire.nodes may already be filled by the time this
+    // lazily-loaded singleton is created, so onValuesChanged would never fire.
     Component.onCompleted: {
+        refreshNodes();
         previousSinkName = sink?.description || sink?.name || qsTr("Unknown Device");
         previousSourceName = source?.description || source?.name || qsTr("Unknown Device");
         routeLoadProc.running = true;
@@ -249,61 +297,21 @@ Singleton {
 
     Connections {
         function onValuesChanged(): void {
-            const newSinks = [];
-            const newSources = [];
-            const newStreams = [];
-            let foundGenChain = false, foundChatChain = false, foundMicChainIn = false;
-
-            for (const node of Pipewire.nodes.values) {
-                if (node.name === "general_chain_out") {
-                    if (root.generalChainOutNode !== null && root.generalChainOutNode !== node)
-                        root.generalOutputDevice = null;
-                    root.generalChainOutNode = node; foundGenChain = true;
-                }
-                if (node.name === "chat_chain_out") {
-                    if (root.chatChainOutNode !== null && root.chatChainOutNode !== node)
-                        root.chatOutputDevice = null;
-                    root.chatChainOutNode = node; foundChatChain = true;
-                }
-                if (node.name === "mic_chain_out")  root.micChainOutNode = node;
-                if (node.name === "mic_chain_in") {
-                    if (root.micChainInNode !== null && root.micChainInNode !== node)
-                        root.micInputDevice = null;
-                    root.micChainInNode = node; foundMicChainIn = true;
-                }
-                if (root.chromashellNodeNames.has(node.name))
-                    continue;
-                if (!node.isStream) {
-                    if (node.isSink)
-                        newSinks.push(node);
-                    else if (node.audio)
-                        newSources.push(node);
-                } else if (node.audio) {
-                    newStreams.push(node);
-                }
-            }
-
-            if (!foundGenChain)   { root.generalChainOutNode = null; root.generalOutputDevice = null; }
-            if (!foundChatChain)  { root.chatChainOutNode    = null; root.chatOutputDevice    = null; }
-            if (!foundMicChainIn) { root.micChainInNode      = null; root.micInputDevice      = null; }
-
-            root.sinks = newSinks;
-            root.sources = newSources;
-            root.streams = newStreams;
-            root.tryRestoreRouting();
+            root.refreshNodes();
         }
 
         target: Pipewire.nodes
     }
 
+    // Always track the current defaults so volume/mute bind even if the lists
+    // momentarily lag behind the default node.
     PwObjectTracker {
         objects: [
+            root.sink, root.source,
             ...root.sinks, ...root.sources, ...root.streams,
-            ...(root.generalChainOutNode ? [root.generalChainOutNode] : []),
-            ...(root.chatChainOutNode    ? [root.chatChainOutNode]    : []),
-            ...(root.micChainOutNode     ? [root.micChainOutNode]     : []),
-            ...(root.micChainInNode      ? [root.micChainInNode]      : [])
-        ]
+            root.generalChainOutNode, root.chatChainOutNode,
+            root.micChainOutNode, root.micChainInNode
+        ].filter(n => n)
     }
 
     Process {
