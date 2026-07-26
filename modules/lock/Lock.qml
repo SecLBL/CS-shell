@@ -62,7 +62,15 @@ Scope {
         }
 
         function unlock(): void {
-            lock.unlock();
+            if (lock.locked) {
+                lock.unlock();
+                return;
+            }
+
+            // No surface of ours to animate out: a crashed instance left the compositor
+            // locked. Adopt that lock (misc:allow_session_lock_restore), then release it.
+            lock.locked = true;
+            Qt.callLater(() => lock.locked = false);
         }
 
         function isLocked(): bool {

@@ -8,6 +8,8 @@ import Quickshell.Services.UPower
 import Caelestia.Config
 import Caelestia.Services
 import qs.services
+// Qualified: bare IdleInhibitor would resolve to the Quickshell.Wayland type, not our singleton
+import qs.services as Services
 
 Scope {
     id: root
@@ -66,6 +68,11 @@ Scope {
                 if (modelData.inhibitWhenAudio && root.hasPlayer)
                     return false;
                 if (modelData.inhibitWhenCharging && root.isCharging)
+                    return false;
+                // Gate on IdleInhibitor directly instead of relying solely on
+                // respectInhibitors: the Wayland inhibitor may fail to register
+                // when keep-awake is restored on startup, before the surface exists.
+                if (respectInhibitors && Services.IdleInhibitor.enabled)
                     return false;
                 return true;
             }
