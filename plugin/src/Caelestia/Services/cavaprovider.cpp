@@ -99,7 +99,8 @@ void CavaProcessor::initCava() {
 CavaProvider::CavaProvider(QObject* parent)
     : AudioProvider(parent)
     , m_bars(0)
-    , m_values(m_bars, 0.0) {
+    , m_values(m_bars, 0.0)
+    , m_revision(0) {
     m_processor = new CavaProcessor();
     init();
 
@@ -122,6 +123,7 @@ void CavaProvider::setBars(int bars) {
 
     m_values.resize(bars, 0.0);
     m_bars = bars;
+    ++m_revision;
     emit barsChanged();
     emit valuesChanged();
 
@@ -133,9 +135,18 @@ QVector<double> CavaProvider::values() const {
     return m_values;
 }
 
+uint CavaProvider::revision() const {
+    return m_revision;
+}
+
+QVector<double> CavaProvider::readValues() const {
+    return m_values;
+}
+
 void CavaProvider::updateValues(QVector<double> values) {
     if (values != m_values) {
         m_values = values;
+        ++m_revision;
         emit valuesChanged();
     }
 }

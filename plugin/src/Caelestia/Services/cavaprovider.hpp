@@ -42,6 +42,11 @@ class CavaProvider : public AudioProvider {
 
     Q_PROPERTY(QVector<double> values READ values NOTIFY valuesChanged)
 
+    // Change token for QML bindings. Reading `values` from QML attaches a
+    // ReferenceObject to this notifier that is only released on JS GC, so bind
+    // to `revision` and pull the data via readValues() instead.
+    Q_PROPERTY(uint revision READ revision NOTIFY valuesChanged)
+
 public:
     explicit CavaProvider(QObject* parent = nullptr);
 
@@ -50,6 +55,12 @@ public:
 
     [[nodiscard]] QVector<double> values() const;
 
+    [[nodiscard]] uint revision() const;
+
+    // Q_INVOKABLE return values are not attached to a property, so this creates
+    // no reference and no notifier endpoint.
+    Q_INVOKABLE [[nodiscard]] QVector<double> readValues() const;
+
 signals:
     void barsChanged();
     void valuesChanged();
@@ -57,6 +68,7 @@ signals:
 private:
     int m_bars;
     QVector<double> m_values;
+    uint m_revision;
 
     void updateValues(QVector<double> values);
 };

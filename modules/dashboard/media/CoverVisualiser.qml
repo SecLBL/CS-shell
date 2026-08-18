@@ -13,6 +13,12 @@ import qs.services
 Item {
     id: root
 
+    // Read once per frame instead of once per bar
+    readonly property var cavaValues: {
+        Audio.cava.revision; // Update on every cava frame
+        return Audio.cava.readValues();
+    }
+
     readonly property real centerX: width / 2
     readonly property real centerY: height / 2
     readonly property real spacing: Tokens.spacing.medium
@@ -40,7 +46,7 @@ Item {
             id: bar
 
             required property int modelData
-            readonly property real value: Math.max(1e-2, Math.min(1, Audio.cava.values[modelData]))
+            readonly property real value: Math.max(1e-2, Math.min(1, root.cavaValues[modelData]))
 
             readonly property real angle: modelData * 2 * Math.PI / GlobalConfig.services.visualiserBars
             readonly property real dist: shapeEdgeDist + value * root.maxMagnitude
