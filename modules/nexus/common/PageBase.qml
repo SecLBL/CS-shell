@@ -18,6 +18,11 @@ ColumnLayout {
     readonly property int cappedWidth: Math.min(Tokens.sizes.nexus.maxContentWidth, width)
     readonly property alias flickable: flickable
 
+    // Viewport top in content coordinates (0 when scrolled to the top)
+    readonly property real scrollY: flickable.contentY + flickable.topMargin
+    // Limit the edge fade to the top margin so pinned items stay opaque
+    property bool compactFade
+
     default property Item contentChild
 
     spacing: Tokens.spacing.extraLargeIncreased
@@ -67,6 +72,7 @@ ColumnLayout {
         Layout.topMargin: -topMargin
         topMargin: Tokens.padding.large
         bottomMargin: Tokens.padding.extraLarge
+        fadeAmount: root.compactFade && height > 0 ? topMargin / height : 0.2
 
         contentHeight: root.contentChild?.implicitHeight ?? 0
         contentItem.children: [root.contentChild]

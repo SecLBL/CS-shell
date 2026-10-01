@@ -13,6 +13,7 @@ PageBase {
 
     title: qsTr("Equalizer")
     isSubPage: true
+    compactFade: true
 
     property var eqState: ({
         enable: 1, gain: 0,
@@ -200,86 +201,90 @@ PageBase {
             wrapMode: Text.WordWrap
         }
 
-        EqGraph {
+        StickySection {
             Layout.fillWidth: true
-            eqState: root.eqState
-            bands: root.bands
-            selectedBand: root.selectedBand
-            onBandSelected: idx => root.selectedBand = idx
-            onParamChanged: (symbol, value) => root.queueEqParam(symbol, value)
-            onEnableToggled: idx => root.queueEqParam(root.bands[idx].enableSym, root.eqState[root.bands[idx].enableSym] > 0.5 ? 0 : 1)
-        }
+            scrollY: root.scrollY - y
 
-        SectionHeader {
-            text: root.currentBand.name
-        }
+            graph: EqGraph {
+                eqState: root.eqState
+                bands: root.bands
+                selectedBand: root.selectedBand
+                onBandSelected: idx => root.selectedBand = idx
+                onParamChanged: (symbol, value) => root.queueEqParam(symbol, value)
+                onEnableToggled: idx => root.queueEqParam(root.bands[idx].enableSym, root.eqState[root.bands[idx].enableSym] > 0.5 ? 0 : 1)
+            }
 
-        ToggleRow {
-            Layout.fillWidth: true
-            first: true
-            text: qsTr("Enabled")
-            checked: root.eqState[root.currentBand.enableSym] > 0.5
-            onToggled: root.queueEqParam(root.currentBand.enableSym, checked ? 1 : 0)
-        }
+            SectionHeader {
+                text: root.currentBand.name
+            }
 
-        ParamSlider {
-            Layout.fillWidth: true
-            label: qsTr("Frequency")
-            logScale: true
-            from: root.currentBand.freqFrom
-            to: root.currentBand.freqTo
-            decimals: 0
-            unit: " Hz"
-            paramValue: root.eqState[root.currentBand.freqSym]
-            onChanged: v => root.queueEqParam(root.currentBand.freqSym, Math.round(v))
-        }
+            ToggleRow {
+                Layout.fillWidth: true
+                first: true
+                text: qsTr("Enabled")
+                checked: root.eqState[root.currentBand.enableSym] > 0.5
+                onToggled: root.queueEqParam(root.currentBand.enableSym, checked ? 1 : 0)
+            }
 
-        ParamSlider {
-            Layout.fillWidth: true
-            last: !root.currentBand.gainSym
-            label: qsTr("Q")
-            from: root.currentBand.qFrom
-            to: root.currentBand.qTo
-            decimals: 2
-            paramValue: root.eqState[root.currentBand.qSym]
-            onChanged: v => root.queueEqParam(root.currentBand.qSym, Math.round(v * 100) / 100)
-        }
+            ParamSlider {
+                Layout.fillWidth: true
+                label: qsTr("Frequency")
+                logScale: true
+                from: root.currentBand.freqFrom
+                to: root.currentBand.freqTo
+                decimals: 0
+                unit: " Hz"
+                paramValue: root.eqState[root.currentBand.freqSym]
+                onChanged: v => root.queueEqParam(root.currentBand.freqSym, Math.round(v))
+            }
 
-        ParamSlider {
-            Layout.fillWidth: true
-            visible: !!root.currentBand.gainSym
-            last: true
-            label: qsTr("Gain")
-            from: -18
-            to: 18
-            unit: " dB"
-            signed: true
-            paramValue: root.currentBand.gainSym ? root.eqState[root.currentBand.gainSym] : 0
-            onChanged: v => root.queueEqParam(root.currentBand.gainSym, Math.round(v * 10) / 10)
-        }
+            ParamSlider {
+                Layout.fillWidth: true
+                last: !root.currentBand.gainSym
+                label: qsTr("Q")
+                from: root.currentBand.qFrom
+                to: root.currentBand.qTo
+                decimals: 2
+                paramValue: root.eqState[root.currentBand.qSym]
+                onChanged: v => root.queueEqParam(root.currentBand.qSym, Math.round(v * 100) / 100)
+            }
 
-        SectionHeader {
-            text: qsTr("Master")
-        }
+            ParamSlider {
+                Layout.fillWidth: true
+                visible: !!root.currentBand.gainSym
+                last: true
+                label: qsTr("Gain")
+                from: -18
+                to: 18
+                unit: " dB"
+                signed: true
+                paramValue: root.currentBand.gainSym ? root.eqState[root.currentBand.gainSym] : 0
+                onChanged: v => root.queueEqParam(root.currentBand.gainSym, Math.round(v * 10) / 10)
+            }
 
-        ToggleRow {
-            Layout.fillWidth: true
-            first: true
-            text: qsTr("Equalizer enabled")
-            checked: root.eqState.enable > 0.5
-            onToggled: root.queueEqParam("enable", checked ? 1 : 0)
-        }
+            SectionHeader {
+                text: qsTr("Master")
+            }
 
-        ParamSlider {
-            Layout.fillWidth: true
-            last: true
-            label: qsTr("Master gain")
-            from: -18
-            to: 18
-            unit: " dB"
-            signed: true
-            paramValue: root.eqState.gain
-            onChanged: v => root.queueEqParam("gain", Math.round(v * 10) / 10)
+            ToggleRow {
+                Layout.fillWidth: true
+                first: true
+                text: qsTr("Equalizer enabled")
+                checked: root.eqState.enable > 0.5
+                onToggled: root.queueEqParam("enable", checked ? 1 : 0)
+            }
+
+            ParamSlider {
+                Layout.fillWidth: true
+                last: true
+                label: qsTr("Master gain")
+                from: -18
+                to: 18
+                unit: " dB"
+                signed: true
+                paramValue: root.eqState.gain
+                onChanged: v => root.queueEqParam("gain", Math.round(v * 10) / 10)
+            }
         }
     }
 }
