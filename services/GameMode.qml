@@ -30,6 +30,9 @@ Singleton {
     }
 
     onEnabledChanged: {
+        // DeepFilterNet off while gaming; it is the only costly plugin in the chains.
+        Quickshell.execDetached(["bash", "-c",
+            'bash "${XDG_CONFIG_HOME:-$HOME/.config}/chromashell/audio/audio-param.sh" --nr-bypass "$0"', enabled ? "on" : "off"]);
         if (enabled) {
             setDynamicConfs();
             if (GlobalConfig.utilities.toasts.gameModeChanged)
