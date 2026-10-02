@@ -40,7 +40,7 @@ PageBase {
         NavRow {
             icon: "mic"
             label: qsTr("Mic processing")
-            status: qsTr("Gate, noise reduction & compressor")
+            status: qsTr("Trim, noise reduction, gate, compressor & limiter")
             onClicked: root.nState.openSubPage(4)
         }
 
@@ -48,7 +48,7 @@ PageBase {
             last: true
             icon: "headset_mic"
             label: qsTr("Chat processing")
-            status: qsTr("Noise reduction & compressor")
+            status: qsTr("Noise reduction, compressor & limiter")
             onClicked: root.nState.openSubPage(5)
         }
     }

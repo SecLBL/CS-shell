@@ -97,84 +97,86 @@ ColumnLayout {
         onToggled: root.setParam("enabled", checked ? 1 : 0)
     }
 
-    ParamSlider {
-        Layout.fillWidth: true
-        label: qsTr("Attenuation limit")
-        from: 0
-        to: 100
-        decimals: 0
-        unit: " dB"
-        enabled: root.on
-        opacity: enabled ? 1 : 0.4
-        paramValue: root.nrState.attenuation
-        onChanged: v => root.setParam("attenuation", Math.round(v))
-    }
+    CollapsibleRows {
+        ParamSlider {
+            Layout.fillWidth: true
+            label: qsTr("Attenuation limit")
+            from: 0
+            to: 100
+            decimals: 0
+            unit: " dB"
+            enabled: root.on
+            opacity: enabled ? 1 : 0.4
+            paramValue: root.nrState.attenuation
+            onChanged: v => root.setParam("attenuation", Math.round(v))
+        }
 
-    ParamSlider {
-        Layout.fillWidth: true
-        label: qsTr("Post filter")
-        from: 0
-        to: 0.05
-        decimals: 3
-        enabled: root.on
-        opacity: enabled ? 1 : 0.4
-        paramValue: root.nrState.postfilter_beta
-        onChanged: v => root.setParam("postfilter_beta", Math.round(v * 1000) / 1000)
-    }
+        ParamSlider {
+            Layout.fillWidth: true
+            label: qsTr("Post filter")
+            from: 0
+            to: 0.05
+            decimals: 3
+            enabled: root.on
+            opacity: enabled ? 1 : 0.4
+            paramValue: root.nrState.postfilter_beta
+            onChanged: v => root.setParam("postfilter_beta", Math.round(v * 1000) / 1000)
+        }
 
-    ParamSlider {
-        Layout.fillWidth: true
-        label: qsTr("Min threshold")
-        from: -15
-        to: 35
-        decimals: 0
-        unit: " dB"
-        signed: true
-        enabled: root.on
-        opacity: enabled ? 1 : 0.4
-        paramValue: root.nrState.min_db
-        onChanged: v => root.setParam("min_db", Math.round(v))
-    }
+        ParamSlider {
+            Layout.fillWidth: true
+            label: qsTr("Min threshold")
+            from: -15
+            to: 35
+            decimals: 0
+            unit: " dB"
+            signed: true
+            enabled: root.on
+            opacity: enabled ? 1 : 0.4
+            paramValue: root.nrState.min_db
+            onChanged: v => root.setParam("min_db", Math.round(v))
+        }
 
-    ParamSlider {
-        Layout.fillWidth: true
-        label: qsTr("Max ERB threshold")
-        from: -15
-        to: 35
-        decimals: 0
-        unit: " dB"
-        signed: true
-        enabled: root.on
-        opacity: enabled ? 1 : 0.4
-        paramValue: root.nrState.max_erb_db
-        onChanged: v => root.setParam("max_erb_db", Math.round(v))
-    }
+        ParamSlider {
+            Layout.fillWidth: true
+            label: qsTr("Max ERB threshold")
+            from: -15
+            to: 35
+            decimals: 0
+            unit: " dB"
+            signed: true
+            enabled: root.on
+            opacity: enabled ? 1 : 0.4
+            paramValue: root.nrState.max_erb_db
+            onChanged: v => root.setParam("max_erb_db", Math.round(v))
+        }
 
-    ParamSlider {
-        Layout.fillWidth: true
-        label: qsTr("Max DF threshold")
-        from: -15
-        to: 35
-        decimals: 0
-        unit: " dB"
-        signed: true
-        enabled: root.on
-        opacity: enabled ? 1 : 0.4
-        paramValue: root.nrState.max_df_db
-        onChanged: v => root.setParam("max_df_db", Math.round(v))
-    }
+        ParamSlider {
+            Layout.fillWidth: true
+            label: qsTr("Max DF threshold")
+            from: -15
+            to: 35
+            decimals: 0
+            unit: " dB"
+            signed: true
+            enabled: root.on
+            opacity: enabled ? 1 : 0.4
+            paramValue: root.nrState.max_df_db
+            onChanged: v => root.setParam("max_df_db", Math.round(v))
+        }
 
-    ParamSlider {
-        Layout.fillWidth: true
-        last: true
-        label: qsTr("Min buffer")
-        from: 0
-        to: 10
-        decimals: 0
-        unit: qsTr(" frames")
-        enabled: root.on
-        opacity: enabled ? 1 : 0.4
-        paramValue: root.nrState.min_buffer
-        onChanged: v => root.setParam("min_buffer", Math.round(v))
+        ParamSlider {
+            Layout.fillWidth: true
+            last: true
+            label: qsTr("Min buffer")
+            from: 0
+            to: 10
+            decimals: 0
+            unit: qsTr(" frames")
+            enabled: root.on
+            opacity: enabled ? 1 : 0.4
+            paramValue: root.nrState.min_buffer
+            onChanged: v => root.setParam("min_buffer", Math.round(v))
+        }
     }
 }

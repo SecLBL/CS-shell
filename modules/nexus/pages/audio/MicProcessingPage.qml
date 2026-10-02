@@ -130,14 +130,45 @@ PageBase {
             Layout.fillWidth: true
             Layout.leftMargin: Tokens.padding.small
             Layout.bottomMargin: Tokens.spacing.medium
-            text: qsTr("Processing chain applied to the microphone signal: gate, noise reduction and compressor. Drag the node on a curve to set threshold and depth/makeup, scroll over it to adjust zone or ratio.")
+            text: qsTr("Processing chain applied to the microphone signal: input trim, noise reduction, gate, compressor and limiter. Drag the node on a curve to set threshold and depth/makeup, scroll over it to adjust zone or ratio.")
             color: Colours.palette.m3outline
             font: Tokens.font.body.small
             wrapMode: Text.WordWrap
         }
 
+        PluginState {
+            id: trim
+
+            plugin: "mic-trim"
+            values: ({
+                trim: 0
+            })
+        }
+
         SectionHeader {
             first: true
+            text: qsTr("Trim")
+        }
+
+        ParamSlider {
+            Layout.fillWidth: true
+            first: true
+            last: true
+            label: qsTr("Input trim")
+            from: -20
+            to: 20
+            unit: " dB"
+            signed: true
+            paramValue: trim.values.trim
+            onChanged: v => trim.set("trim", Math.round(v * 10) / 10)
+        }
+
+        NoiseReductionControls {
+            Layout.fillWidth: true
+            plugin: "mic-nr"
+        }
+
+        SectionHeader {
             text: qsTr("Gate")
         }
 
@@ -174,257 +205,254 @@ PageBase {
                 onToggled: root.setGateParam("enabled", checked ? 1 : 0)
             }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Threshold")
-                from: -60
-                to: 0
-                unit: " dB"
-                paramValue: root.linToDb(root.gateState.gt)
-                onChanged: v => root.setGateParam("gt", root.dbToLin(v))
-            }
+            CollapsibleRows {
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Threshold")
+                    from: -60
+                    to: 0
+                    unit: " dB"
+                    paramValue: root.linToDb(root.gateState.gt)
+                    onChanged: v => root.setGateParam("gt", root.dbToLin(v))
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Zone")
-                from: 0.001
-                to: 1
-                decimals: 3
-                paramValue: root.gateState.gz
-                onChanged: v => root.setGateParam("gz", Math.round(v * 1000) / 1000)
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Zone")
+                    from: 0.001
+                    to: 1
+                    decimals: 3
+                    paramValue: root.gateState.gz
+                    onChanged: v => root.setGateParam("gz", Math.round(v * 1000) / 1000)
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Attack")
-                from: 0
-                to: 2000
-                unit: " ms"
-                paramValue: root.gateState.at
-                onChanged: v => root.setGateParam("at", Math.round(v * 10) / 10)
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Attack")
+                    from: 0
+                    to: 2000
+                    unit: " ms"
+                    paramValue: root.gateState.at
+                    onChanged: v => root.setGateParam("at", Math.round(v * 10) / 10)
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Hold")
-                from: 0
-                to: 1000
-                unit: " ms"
-                paramValue: root.gateState.hold
-                onChanged: v => root.setGateParam("hold", Math.round(v * 10) / 10)
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Hold")
+                    from: 0
+                    to: 1000
+                    unit: " ms"
+                    paramValue: root.gateState.hold
+                    onChanged: v => root.setGateParam("hold", Math.round(v * 10) / 10)
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Release")
-                from: 0
-                to: 5000
-                unit: " ms"
-                paramValue: root.gateState.rt
-                onChanged: v => root.setGateParam("rt", Math.round(v * 10) / 10)
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Release")
+                    from: 0
+                    to: 5000
+                    unit: " ms"
+                    paramValue: root.gateState.rt
+                    onChanged: v => root.setGateParam("rt", Math.round(v * 10) / 10)
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Floor")
-                from: -80
-                to: 0
-                unit: " dB"
-                paramValue: root.linToDb(root.gateState.gr)
-                onChanged: v => root.setGateParam("gr", root.dbToLin(v))
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Floor")
+                    from: -80
+                    to: 0
+                    unit: " dB"
+                    paramValue: root.linToDb(root.gateState.gr)
+                    onChanged: v => root.setGateParam("gr", root.dbToLin(v))
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Makeup")
-                from: -20
-                to: 20
-                unit: " dB"
-                signed: true
-                paramValue: root.linToDb(root.gateState.mk)
-                onChanged: v => root.setGateParam("mk", root.dbToLin(v))
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Makeup")
+                    from: -20
+                    to: 20
+                    unit: " dB"
+                    signed: true
+                    paramValue: root.linToDb(root.gateState.mk)
+                    onChanged: v => root.setGateParam("mk", root.dbToLin(v))
+                }
 
-            ToggleRow {
-                Layout.fillWidth: true
-                text: qsTr("Hysteresis")
-                subtext: qsTr("Separate open and close thresholds")
-                checked: root.gateState.gh > 0.5
-                onToggled: root.setGateParam("gh", checked ? 1 : 0)
-            }
+                ToggleRow {
+                    Layout.fillWidth: true
+                    text: qsTr("Hysteresis")
+                    subtext: qsTr("Separate open and close thresholds")
+                    checked: root.gateState.gh > 0.5
+                    onToggled: root.setGateParam("gh", checked ? 1 : 0)
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Hysteresis threshold")
-                from: -60
-                to: 0
-                unit: " dB"
-                enabled: root.gateState.gh > 0.5
-                opacity: enabled ? 1 : 0.4
-                paramValue: root.linToDb(root.gateState.ht)
-                onChanged: v => root.setGateParam("ht", root.dbToLin(v))
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Hysteresis threshold")
+                    from: -60
+                    to: 0
+                    unit: " dB"
+                    enabled: root.gateState.gh > 0.5
+                    opacity: enabled ? 1 : 0.4
+                    paramValue: root.linToDb(root.gateState.ht)
+                    onChanged: v => root.setGateParam("ht", root.dbToLin(v))
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                last: true
-                label: qsTr("Hysteresis zone")
-                from: 0.001
-                to: 1
-                decimals: 3
-                enabled: root.gateState.gh > 0.5
-                opacity: enabled ? 1 : 0.4
-                paramValue: root.gateState.hz
-                onChanged: v => root.setGateParam("hz", Math.round(v * 1000) / 1000)
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    last: true
+                    label: qsTr("Hysteresis zone")
+                    from: 0.001
+                    to: 1
+                    decimals: 3
+                    enabled: root.gateState.gh > 0.5
+                    opacity: enabled ? 1 : 0.4
+                    paramValue: root.gateState.hz
+                    onChanged: v => root.setGateParam("hz", Math.round(v * 1000) / 1000)
+                }
 
-            SubsectionHeader {
-                text: qsTr("Gain & mix")
-            }
+                SubsectionHeader {
+                    text: qsTr("Gain & mix")
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                first: true
-                label: qsTr("Input gain")
-                from: -20
-                to: 20
-                unit: " dB"
-                signed: true
-                paramValue: root.linToDb(root.gateState.g_in)
-                onChanged: v => root.setGateParam("g_in", root.dbToLin(v))
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    first: true
+                    label: qsTr("Input gain")
+                    from: -20
+                    to: 20
+                    unit: " dB"
+                    signed: true
+                    paramValue: root.linToDb(root.gateState.g_in)
+                    onChanged: v => root.setGateParam("g_in", root.dbToLin(v))
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Output gain")
-                from: -20
-                to: 20
-                unit: " dB"
-                signed: true
-                paramValue: root.linToDb(root.gateState.g_out)
-                onChanged: v => root.setGateParam("g_out", root.dbToLin(v))
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Output gain")
+                    from: -20
+                    to: 20
+                    unit: " dB"
+                    signed: true
+                    paramValue: root.linToDb(root.gateState.g_out)
+                    onChanged: v => root.setGateParam("g_out", root.dbToLin(v))
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                last: true
-                label: qsTr("Dry/Wet")
-                from: 0
-                to: 100
-                decimals: 0
-                unit: " %"
-                paramValue: root.gateState.cdw
-                onChanged: v => root.setGateParam("cdw", Math.round(v))
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    last: true
+                    label: qsTr("Dry/Wet")
+                    from: 0
+                    to: 100
+                    decimals: 0
+                    unit: " %"
+                    paramValue: root.gateState.cdw
+                    onChanged: v => root.setGateParam("cdw", Math.round(v))
+                }
 
-            // Menu item lists are shared with the compressor (same LSP enums)
-            SubsectionHeader {
-                text: qsTr("Sidechain")
-            }
+                // Menu item lists are shared with the compressor (same LSP enums)
+                SubsectionHeader {
+                    text: qsTr("Sidechain")
+                }
 
-            SelectRow {
-                Layout.fillWidth: true
-                first: true
-                label: qsTr("Mode")
-                menuItems: micComp.scModeItems
-                active: micComp.scModeItems[Math.round(root.gateState.scm)] ?? micComp.scModeItems[0]
-                onSelected: item => root.setGateParam("scm", micComp.scModeItems.indexOf(item))
-            }
+                SelectRow {
+                    Layout.fillWidth: true
+                    first: true
+                    label: qsTr("Mode")
+                    menuItems: micComp.scModeItems
+                    active: micComp.scModeItems[Math.round(root.gateState.scm)] ?? micComp.scModeItems[0]
+                    onSelected: item => root.setGateParam("scm", micComp.scModeItems.indexOf(item))
+                }
 
-            SelectRow {
-                Layout.fillWidth: true
-                label: qsTr("Source")
-                menuItems: micComp.scSourceItems
-                active: micComp.scSourceItems[Math.round(root.gateState.scs)] ?? micComp.scSourceItems[0]
-                onSelected: item => root.setGateParam("scs", micComp.scSourceItems.indexOf(item))
-            }
+                SelectRow {
+                    Layout.fillWidth: true
+                    label: qsTr("Source")
+                    menuItems: micComp.scSourceItems
+                    active: micComp.scSourceItems[Math.round(root.gateState.scs)] ?? micComp.scSourceItems[0]
+                    onSelected: item => root.setGateParam("scs", micComp.scSourceItems.indexOf(item))
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Lookahead")
-                from: 0
-                to: 20
-                unit: " ms"
-                paramValue: root.gateState.sla
-                onChanged: v => root.setGateParam("sla", Math.round(v * 10) / 10)
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Lookahead")
+                    from: 0
+                    to: 20
+                    unit: " ms"
+                    paramValue: root.gateState.sla
+                    onChanged: v => root.setGateParam("sla", Math.round(v * 10) / 10)
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("Reactivity")
-                from: 0
-                to: 250
-                unit: " ms"
-                paramValue: root.gateState.scr
-                onChanged: v => root.setGateParam("scr", Math.round(v * 10) / 10)
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("Reactivity")
+                    from: 0
+                    to: 250
+                    unit: " ms"
+                    paramValue: root.gateState.scr
+                    onChanged: v => root.setGateParam("scr", Math.round(v * 10) / 10)
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                last: true
-                label: qsTr("Preamp")
-                from: -40
-                to: 40
-                unit: " dB"
-                signed: true
-                paramValue: root.linToDb(root.gateState.scp)
-                onChanged: v => root.setGateParam("scp", root.dbToLin(v))
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    last: true
+                    label: qsTr("Preamp")
+                    from: -40
+                    to: 40
+                    unit: " dB"
+                    signed: true
+                    paramValue: root.linToDb(root.gateState.scp)
+                    onChanged: v => root.setGateParam("scp", root.dbToLin(v))
+                }
 
-            SubsectionHeader {
-                text: qsTr("Sidechain filters")
-            }
+                SubsectionHeader {
+                    text: qsTr("Sidechain filters")
+                }
 
-            SelectRow {
-                Layout.fillWidth: true
-                first: true
-                label: qsTr("High-pass slope")
-                menuItems: micComp.filterSlopeItems
-                active: micComp.filterSlopeItems[Math.round(root.gateState.shpm)] ?? micComp.filterSlopeItems[0]
-                onSelected: item => root.setGateParam("shpm", micComp.filterSlopeItems.indexOf(item))
-            }
+                SelectRow {
+                    Layout.fillWidth: true
+                    first: true
+                    label: qsTr("High-pass slope")
+                    menuItems: micComp.filterSlopeItems
+                    active: micComp.filterSlopeItems[Math.round(root.gateState.shpm)] ?? micComp.filterSlopeItems[0]
+                    onSelected: item => root.setGateParam("shpm", micComp.filterSlopeItems.indexOf(item))
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                label: qsTr("High-pass frequency")
-                logScale: true
-                from: 10
-                to: 20000
-                decimals: 0
-                unit: " Hz"
-                enabled: root.gateState.shpm > 0.5
-                opacity: enabled ? 1 : 0.4
-                paramValue: root.gateState.shpf
-                onChanged: v => root.setGateParam("shpf", Math.round(v))
-            }
+                ParamSlider {
+                    Layout.fillWidth: true
+                    label: qsTr("High-pass frequency")
+                    logScale: true
+                    from: 10
+                    to: 20000
+                    decimals: 0
+                    unit: " Hz"
+                    enabled: root.gateState.shpm > 0.5
+                    opacity: enabled ? 1 : 0.4
+                    paramValue: root.gateState.shpf
+                    onChanged: v => root.setGateParam("shpf", Math.round(v))
+                }
 
-            SelectRow {
-                Layout.fillWidth: true
-                label: qsTr("Low-pass slope")
-                menuItems: micComp.filterSlopeItems
-                active: micComp.filterSlopeItems[Math.round(root.gateState.slpm)] ?? micComp.filterSlopeItems[0]
-                onSelected: item => root.setGateParam("slpm", micComp.filterSlopeItems.indexOf(item))
-            }
+                SelectRow {
+                    Layout.fillWidth: true
+                    label: qsTr("Low-pass slope")
+                    menuItems: micComp.filterSlopeItems
+                    active: micComp.filterSlopeItems[Math.round(root.gateState.slpm)] ?? micComp.filterSlopeItems[0]
+                    onSelected: item => root.setGateParam("slpm", micComp.filterSlopeItems.indexOf(item))
+                }
 
-            ParamSlider {
-                Layout.fillWidth: true
-                last: true
-                label: qsTr("Low-pass frequency")
-                logScale: true
-                from: 10
-                to: 20000
-                decimals: 0
-                unit: " Hz"
-                enabled: root.gateState.slpm > 0.5
-                opacity: enabled ? 1 : 0.4
-                paramValue: root.gateState.slpf
-                onChanged: v => root.setGateParam("slpf", Math.round(v))
+                ParamSlider {
+                    Layout.fillWidth: true
+                    last: true
+                    label: qsTr("Low-pass frequency")
+                    logScale: true
+                    from: 10
+                    to: 20000
+                    decimals: 0
+                    unit: " Hz"
+                    enabled: root.gateState.slpm > 0.5
+                    opacity: enabled ? 1 : 0.4
+                    paramValue: root.gateState.slpf
+                    onChanged: v => root.setGateParam("slpf", Math.round(v))
+                }
             }
-        }
-
-        NoiseReductionControls {
-            Layout.fillWidth: true
-            plugin: "mic-nr"
         }
 
         CompressorControls {
@@ -433,6 +461,11 @@ PageBase {
             Layout.fillWidth: true
             plugin: "mic-comp"
             scrollY: root.scrollY
+        }
+
+        LimiterControls {
+            Layout.fillWidth: true
+            plugin: "mic-lim"
         }
     }
 }
