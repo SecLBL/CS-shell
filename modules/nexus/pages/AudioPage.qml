@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
-import qs.components
+import Caelestia.I18n
 import qs.services
 import qs.utils
 import qs.modules.nexus.common
@@ -11,7 +11,7 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    title: qsTr("Audio")
+    title: Tr.tr("Audio")
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -28,15 +28,15 @@ PageBase {
         SliderRow {
             first: true
             icon: Icons.getVolumeIcon(Audio.volume, Audio.muted)
-            label: qsTr("Volume")
-            valueLabel: Math.round(value * 100) + "%"
+            label: Tr.tr("Volume")
+            valueLabel: Strings.percentOne(value)
             value: Audio.volume
             enabled: !Audio.muted
             onMoved: v => Audio.setVolume(v)
         }
 
         ToggleRow {
-            text: qsTr("Muted")
+            text: Tr.trCtx("Muted", "audio output muted")
             checked: Audio.muted
             onToggled: Audio.setStreamMuted(Audio.generalChainOutNode, checked)
         }
@@ -59,7 +59,7 @@ PageBase {
             first: true
             icon: Icons.getVolumeIcon(Audio.chatVolume, Audio.chatMuted)
             label: qsTr("Volume")
-            valueLabel: Math.round(value * 100) + "%"
+            valueLabel: Strings.percentOne(value)
             value: Audio.chatVolume
             enabled: !Audio.chatMuted
             onMoved: v => Audio.setChatVolume(v)
@@ -90,7 +90,7 @@ PageBase {
             first: true
             icon: Icons.getMicVolumeIcon(Audio.micVolume, Audio.micMuted)
             label: qsTr("Volume")
-            valueLabel: Math.round(value * 100) + "%"
+            valueLabel: Strings.percentOne(value)
             value: Audio.micVolume
             enabled: !Audio.micMuted
             onMoved: v => Audio.setMicVolume(v)
@@ -113,109 +113,24 @@ PageBase {
         }
 
         // Per-app volumes
-        ConnectedRect {
-            Layout.fillWidth: true
+        NavRow {
             Layout.topMargin: Tokens.spacing.large - parent.spacing
-            implicitHeight: appLayout.implicitHeight + appLayout.anchors.margins * 2
             first: true
 
-            StateLayer {
-                onClicked: root.nState.openSubPage(1)
-            }
-
-            RowLayout {
-                id: appLayout
-
-                anchors.fill: parent
-                anchors.margins: Tokens.padding.medium
-                anchors.leftMargin: Tokens.padding.largeIncreased
-                anchors.rightMargin: Tokens.padding.largeIncreased
-                spacing: Tokens.spacing.medium
-
-                MaterialIcon {
-                    text: "tune"
-                    fontStyle: Tokens.font.icon.medium
-                }
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 0
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: qsTr("App volumes")
-                        font: Tokens.font.body.small
-                        elide: Text.ElideRight
-                    }
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: Audio.streams.length === 0 ? qsTr("No apps playing audio") : Audio.streams.length === 1 ? qsTr("1 app playing audio") : qsTr("%1 apps playing audio").arg(Audio.streams.length)
-                        color: Colours.palette.m3outline
-                        font: Tokens.font.label.small
-                        elide: Text.ElideRight
-                        animate: true
-                    }
-                }
-
-                MaterialIcon {
-                    text: "chevron_right"
-                    color: Colours.palette.m3onSurfaceVariant
-                    fontStyle: Tokens.font.icon.medium
-                }
-            }
+            icon: "tune"
+            text: Tr.tr("App volumes")
+            subtext: Audio.streams.length === 0 ? Tr.tr("No apps playing audio") : Tr.trN("%n app playing audio", "%n apps playing audio", Audio.streams.length)
+            onClicked: root.nState.openSubPage(1)
         }
 
         // Plugin chains (EQ, gate, compressors, noise reduction)
-        ConnectedRect {
-            Layout.fillWidth: true
-            implicitHeight: processingLayout.implicitHeight + processingLayout.anchors.margins * 2
+        NavRow {
             last: true
 
-            StateLayer {
-                onClicked: root.nState.openSubPage(2)
-            }
-
-            RowLayout {
-                id: processingLayout
-
-                anchors.fill: parent
-                anchors.margins: Tokens.padding.medium
-                anchors.leftMargin: Tokens.padding.largeIncreased
-                anchors.rightMargin: Tokens.padding.largeIncreased
-                spacing: Tokens.spacing.medium
-
-                MaterialIcon {
-                    text: "equalizer"
-                    font: Tokens.font.icon.medium
-                }
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 0
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: qsTr("Audio processing")
-                        font: Tokens.font.body.small
-                        elide: Text.ElideRight
-                    }
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: qsTr("Equalizer, gate, compressors & noise reduction")
-                        color: Colours.palette.m3outline
-                        font: Tokens.font.label.small
-                        elide: Text.ElideRight
-                    }
-                }
-
-                MaterialIcon {
-                    text: "chevron_right"
-                    color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.icon.medium
-                }
-            }
+            icon: "equalizer"
+            text: qsTr("Audio processing")
+            subtext: qsTr("Equalizer, gate, compressors & noise reduction")
+            onClicked: root.nState.openSubPage(2)
         }
     }
 }

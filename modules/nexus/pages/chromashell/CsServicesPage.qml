@@ -23,7 +23,7 @@ PageBase {
         }
     ]
 
-    // GPU options + the config string each maps to (see Gpu::parseType)
+    // Order matches the GpuType enum
     readonly property list<MenuItem> gpuItems: [
         MenuItem {
             text: qsTr("Auto")
@@ -38,18 +38,6 @@ PageBase {
             text: qsTr("None")
         }
     ]
-    readonly property list<string> gpuValues: ["", "NVIDIA", "GENERIC", "None"]
-
-    function gpuKeyToIndex(key: string): int {
-        const u = (key ?? "").trim().toUpperCase();
-        if (u === "")
-            return 0; // Auto
-        if (u === "NVIDIA")
-            return 1;
-        if (u === "GENERIC")
-            return 2;
-        return 3; // None
-    }
 
     title: qsTr("Services")
     isSubPage: true
@@ -68,35 +56,11 @@ PageBase {
         CsTextFieldRow {
             Layout.fillWidth: true
             first: true
+            last: true
             label: qsTr("Weather location")
             subtext: qsTr("City name or lat,long — empty for auto detection")
             value: GlobalConfig.services.weatherLocation
             onEdited: v => GlobalConfig.services.weatherLocation = v
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            text: qsTr("Fahrenheit")
-            subtext: qsTr("Use Fahrenheit for weather temperatures")
-            checked: GlobalConfig.services.useFahrenheit
-            onToggled: GlobalConfig.services.useFahrenheit = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            text: qsTr("Fahrenheit for performance")
-            subtext: qsTr("Use Fahrenheit for CPU/GPU temperatures")
-            checked: GlobalConfig.services.useFahrenheitPerformance
-            onToggled: GlobalConfig.services.useFahrenheitPerformance = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            last: true
-            text: qsTr("12-hour clock")
-            subtext: qsTr("Use a 12-hour clock format")
-            checked: GlobalConfig.services.useTwelveHourClock
-            onToggled: GlobalConfig.services.useTwelveHourClock = checked
         }
 
         SectionHeader {
@@ -117,8 +81,8 @@ PageBase {
             label: qsTr("GPU")
             subtext: qsTr("Override for GPU type")
             menuItems: root.gpuItems
-            active: root.gpuItems[root.gpuKeyToIndex(GlobalConfig.services.gpuType)]
-            onSelected: item => GlobalConfig.services.gpuType = root.gpuValues[root.gpuItems.indexOf(item)]
+            active: root.gpuItems[GlobalConfig.services.gpuType]
+            onSelected: item => GlobalConfig.services.gpuType = root.gpuItems.indexOf(item)
         }
 
         StepperRow {
@@ -190,15 +154,15 @@ PageBase {
             label: qsTr("Lyrics backend")
             subtext: qsTr("Source used to fetch synced lyrics")
             menuItems: root.lyricsItems
-            active: root.lyricsItems.find(i => i.text === GlobalConfig.services.lyricsBackend) ?? root.lyricsItems[0]
-            onSelected: item => GlobalConfig.services.lyricsBackend = item.text
+            active: root.lyricsItems[GlobalConfig.services.lyricsBackend]
+            onSelected: item => GlobalConfig.services.lyricsBackend = root.lyricsItems.indexOf(item)
         }
 
         CsObjectListRow {
             Layout.fillWidth: true
             label: qsTr("Player aliases")
             subtext: qsTr("Rename players for display")
-            values: GlobalConfig.services.playerAliases
+            list: GlobalConfig.services.playerAliases
             titleKey: "to"
             defaultEntry: ({
                     from: "",
@@ -216,7 +180,6 @@ PageBase {
                     type: "string"
                 }
             ]
-            onEdited: v => GlobalConfig.services.playerAliases = v
         }
 
         CsStringListRow {

@@ -14,7 +14,9 @@ ConnectedRect {
 
     property string label
     property string subtext
-    property var values: []
+    // Typed config list (ListNode); when set, entries are read from and written back to it
+    property var list: null
+    property var values: list ? list.values.map(n => Object.fromEntries(fields.map(f => [f.key, n[f.key]]))) : []
     // Field descriptors: { key, label, type: "string"|"bool"|"int"|"real"|"json"|"select", options?, from?, to?, step? }
     property var fields: []
     property var defaultEntry: ({})
@@ -23,6 +25,14 @@ ConnectedRect {
     property int expandedIndex: -1
 
     signal edited(values: var)
+
+    onEdited: xs => {
+        if (!list)
+            return;
+        list.clear();
+        for (const e of xs)
+            list.insert(e);
+    }
 
     function copyValues(): var {
         return (root.values ?? []).map(e => (typeof e === "object" && e !== null) ? Object.assign({}, e) : e);

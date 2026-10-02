@@ -175,7 +175,7 @@ PageBase {
             last: true
             label: qsTr("Icon substitutions")
             subtext: qsTr("Replace a tray item's icon by id")
-            values: GlobalConfig.bar.tray.iconSubs
+            list: GlobalConfig.bar.tray.iconSubs
             titleKey: "id"
             defaultEntry: ({
                     id: "",
@@ -198,77 +198,38 @@ PageBase {
                     type: "string"
                 }
             ]
-            onEdited: v => GlobalConfig.bar.tray.iconSubs = v
         }
 
         SectionHeader {
             text: qsTr("Status icons")
         }
 
-        ToggleRow {
+        CsObjectListRow {
             Layout.fillWidth: true
             first: true
-            text: qsTr("Audio")
-            subtext: qsTr("Show the audio icon")
-            checked: GlobalConfig.bar.status.showAudio
-            onToggled: GlobalConfig.bar.status.showAudio = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            text: qsTr("Microphone")
-            subtext: qsTr("Show the microphone icon")
-            checked: GlobalConfig.bar.status.showMicrophone
-            onToggled: GlobalConfig.bar.status.showMicrophone = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            text: qsTr("Keyboard layout")
-            subtext: qsTr("Show the keyboard layout")
-            checked: GlobalConfig.bar.status.showKbLayout
-            onToggled: GlobalConfig.bar.status.showKbLayout = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            text: qsTr("Network")
-            subtext: qsTr("Show the network icon")
-            checked: GlobalConfig.bar.status.showNetwork
-            onToggled: GlobalConfig.bar.status.showNetwork = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            text: qsTr("Wi-Fi")
-            subtext: qsTr("Show the Wi-Fi icon")
-            checked: GlobalConfig.bar.status.showWifi
-            onToggled: GlobalConfig.bar.status.showWifi = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            text: qsTr("Bluetooth")
-            subtext: qsTr("Show the Bluetooth icon")
-            checked: GlobalConfig.bar.status.showBluetooth
-            onToggled: GlobalConfig.bar.status.showBluetooth = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
-            text: qsTr("Battery")
-            subtext: qsTr("Show the battery icon")
-            checked: GlobalConfig.bar.status.showBattery
-            onToggled: GlobalConfig.bar.status.showBattery = checked
-        }
-
-        ToggleRow {
-            Layout.fillWidth: true
             last: true
-            text: qsTr("Lock status")
-            subtext: qsTr("Show caps/num lock indicators")
-            checked: GlobalConfig.bar.status.showLockStatus
-            onToggled: GlobalConfig.bar.status.showLockStatus = checked
+            label: qsTr("Status icons")
+            subtext: qsTr("Icons in the status area, in order")
+            list: GlobalConfig.bar.statusIcons
+            titleKey: "id"
+            reorderable: true
+            defaultEntry: ({
+                    id: "audio",
+                    enabled: true
+                })
+            fields: [
+                {
+                    key: "id",
+                    label: qsTr("Icon"),
+                    type: "select",
+                    options: ["lockStatus", "audio", "microphone", "kbLayout", "network", "bluetooth", "battery"]
+                },
+                {
+                    key: "enabled",
+                    label: qsTr("Enabled"),
+                    type: "bool"
+                }
+            ]
         }
 
         SectionHeader {
@@ -310,7 +271,7 @@ PageBase {
             first: true
             label: qsTr("Bar entries")
             subtext: qsTr("Components on the bar, in order")
-            values: GlobalConfig.bar.entries
+            list: GlobalConfig.bar.entries
             titleKey: "id"
             reorderable: true
             defaultEntry: ({
@@ -330,7 +291,6 @@ PageBase {
                     type: "bool"
                 }
             ]
-            onEdited: v => GlobalConfig.bar.entries = v
         }
 
         CsStringListRow {
@@ -350,8 +310,8 @@ PageBase {
             first: true
             last: true
             icon: "workspaces"
-            label: qsTr("Workspaces")
-            status: qsTr("Indicators, labels, window icons")
+            text: qsTr("Workspaces")
+            subtext: qsTr("Indicators, labels, window icons")
             onClicked: root.nState.openSubPage(18)
         }
     }

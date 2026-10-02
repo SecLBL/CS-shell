@@ -7,16 +7,16 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    // Values checked in modules/bar/components/workspaces/Workspace.qml
+    // Order matches the BarWorkspaceCapitalisation enum
     readonly property list<MenuItem> capitalisationItems: [
         MenuItem {
             text: "preserve"
         },
         MenuItem {
-            text: "lower"
+            text: "upper"
         },
         MenuItem {
-            text: "upper"
+            text: "lower"
         }
     ]
 
@@ -97,8 +97,8 @@ PageBase {
             last: true
             text: qsTr("Per-monitor workspaces")
             subtext: qsTr("Show each monitor's own workspaces")
-            checked: GlobalConfig.bar.workspaces.perMonitorWorkspaces
-            onToggled: GlobalConfig.bar.workspaces.perMonitorWorkspaces = checked
+            checked: GlobalConfig.bar.workspaces.perMonitor
+            onToggled: GlobalConfig.bar.workspaces.perMonitor = checked
         }
 
         SectionHeader {
@@ -136,8 +136,8 @@ PageBase {
             label: qsTr("Capitalisation")
             subtext: qsTr("Capitalisation of workspace names")
             menuItems: root.capitalisationItems
-            active: root.capitalisationItems.find(i => i.text === GlobalConfig.bar.workspaces.capitalisation) ?? root.capitalisationItems[0]
-            onSelected: item => GlobalConfig.bar.workspaces.capitalisation = item.text
+            active: root.capitalisationItems[GlobalConfig.bar.workspaces.capitalisation]
+            onSelected: item => GlobalConfig.bar.workspaces.capitalisation = root.capitalisationItems.indexOf(item)
         }
 
         SectionHeader {
@@ -149,7 +149,7 @@ PageBase {
             first: true
             label: qsTr("Special workspace icons")
             subtext: qsTr("Match special workspaces by name or regex")
-            values: GlobalConfig.bar.workspaces.specialWorkspaceIcons
+            list: GlobalConfig.bar.workspaces.specialWorkspaceIcons
             titleKey: "name"
             defaultEntry: ({
                     name: "",
@@ -177,7 +177,6 @@ PageBase {
                     type: "string"
                 }
             ]
-            onEdited: v => GlobalConfig.bar.workspaces.specialWorkspaceIcons = v
         }
 
         CsObjectListRow {
@@ -185,7 +184,7 @@ PageBase {
             last: true
             label: qsTr("Window icons")
             subtext: qsTr("Override window icons by class regex")
-            values: GlobalConfig.bar.workspaces.windowIcons
+            list: GlobalConfig.bar.workspaces.windowIcons
             titleKey: "regex"
             defaultEntry: ({
                     regex: "",
@@ -208,7 +207,6 @@ PageBase {
                     type: "string"
                 }
             ]
-            onEdited: v => GlobalConfig.bar.workspaces.windowIcons = v
         }
     }
 }

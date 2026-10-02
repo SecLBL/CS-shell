@@ -56,8 +56,8 @@ PageBase {
             label: qsTr("Fullscreen popups")
             subtext: qsTr("Show notification popups over fullscreen windows")
             menuItems: root.fullscreenItems
-            active: root.fullscreenItems.find(i => i.text === GlobalConfig.notifs.fullscreen) ?? root.fullscreenItems[0]
-            onSelected: item => GlobalConfig.notifs.fullscreen = item.text
+            active: root.fullscreenItems[GlobalConfig.notifs.fullscreen]
+            onSelected: item => GlobalConfig.notifs.fullscreen = root.fullscreenItems.indexOf(item)
         }
 
         SectionHeader {

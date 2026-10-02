@@ -32,23 +32,23 @@ PageBase {
         NavRow {
             first: true
             icon: "equalizer"
-            label: qsTr("Equalizer")
-            status: qsTr("fil4 parametric EQ on the general output")
+            text: qsTr("Equalizer")
+            subtext: qsTr("fil4 parametric EQ on the general output")
             onClicked: root.nState.openSubPage(3)
         }
 
         NavRow {
             icon: "mic"
-            label: qsTr("Mic processing")
-            status: qsTr("Trim, noise reduction, gate, compressor & limiter")
+            text: qsTr("Mic processing")
+            subtext: qsTr("Trim, noise reduction, gate, compressor & limiter")
             onClicked: root.nState.openSubPage(4)
         }
 
         NavRow {
             last: true
             icon: "headset_mic"
-            label: qsTr("Chat processing")
-            status: qsTr("Noise reduction, compressor & limiter")
+            text: qsTr("Chat processing")
+            subtext: qsTr("Noise reduction, compressor & limiter")
             onClicked: root.nState.openSubPage(5)
         }
     }

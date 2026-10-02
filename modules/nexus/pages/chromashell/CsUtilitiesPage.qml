@@ -179,8 +179,22 @@ PageBase {
             last: true
             label: qsTr("Providers")
             subtext: qsTr("JSON list of provider names or objects (see services/VPN.qml)")
-            value: GlobalConfig.utilities.vpn.provider
-            onEdited: v => GlobalConfig.utilities.vpn.provider = v
+            value: GlobalConfig.utilities.vpn.provider.values.map(n => ({
+                        id: n.id,
+                        name: n.name,
+                        displayName: n.displayName,
+                        interface: n.interface,
+                        connectCmd: n.connectCmd,
+                        disconnectCmd: n.disconnectCmd
+                    }))
+            onEdited: v => {
+                const list = GlobalConfig.utilities.vpn.provider;
+                list.clear();
+                for (const e of v)
+                    list.insert(typeof e === "string" ? {
+                        name: e
+                    } : e);
+            }
         }
 
         SectionHeader {
@@ -193,7 +207,7 @@ PageBase {
             last: true
             label: qsTr("Quick toggles")
             subtext: qsTr("Buttons in the utilities drawer, in order")
-            values: GlobalConfig.utilities.quickToggles
+            list: GlobalConfig.utilities.quickToggles
             titleKey: "id"
             reorderable: true
             defaultEntry: ({
@@ -213,7 +227,6 @@ PageBase {
                     type: "bool"
                 }
             ]
-            onEdited: v => GlobalConfig.utilities.quickToggles = v
         }
     }
 }

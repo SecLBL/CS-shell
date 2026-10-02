@@ -118,7 +118,7 @@ PageBase {
             last: true
             label: qsTr("Idle timeouts")
             subtext: qsTr("Actions are a string or a JSON command array")
-            values: GlobalConfig.general.idle.timeouts
+            list: GlobalConfig.general.idle.timeouts
             titleKey: "idleAction"
             defaultEntry: ({
                     timeout: 300,
@@ -144,7 +144,6 @@ PageBase {
                     type: "json"
                 }
             ]
-            onEdited: v => GlobalConfig.general.idle.timeouts = v
         }
 
         SectionHeader {
@@ -156,7 +155,7 @@ PageBase {
             first: true
             label: qsTr("Warning levels")
             subtext: qsTr("Notifications shown when the battery falls to a level")
-            values: GlobalConfig.general.battery.warnLevels
+            list: GlobalConfig.general.battery.warnLevels
             titleKey: "title"
             defaultEntry: ({
                     level: 15,
@@ -194,7 +193,6 @@ PageBase {
                     type: "bool"
                 }
             ]
-            onEdited: v => GlobalConfig.general.battery.warnLevels = v
         }
 
         StepperRow {

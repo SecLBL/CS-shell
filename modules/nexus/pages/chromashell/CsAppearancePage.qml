@@ -128,8 +128,8 @@ PageBase {
             first: true
             last: true
             icon: "font_download"
-            label: qsTr("Fonts")
-            status: qsTr("Families, sizes, weights, variable axes")
+            text: qsTr("Fonts")
+            subtext: qsTr("Families, sizes, weights, variable axes")
             onClicked: root.nState.openSubPage(17)
         }
     }

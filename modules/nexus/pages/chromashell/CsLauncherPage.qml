@@ -175,7 +175,7 @@ PageBase {
             last: true
             label: qsTr("Launcher actions")
             subtext: qsTr("Command is a JSON array, e.g. [\"systemctl\", \"poweroff\"]")
-            values: GlobalConfig.launcher.actions
+            list: GlobalConfig.launcher.actions
             titleKey: "name"
             defaultEntry: ({
                     name: "",
@@ -210,7 +210,6 @@ PageBase {
                     type: "bool"
                 }
             ]
-            onEdited: v => GlobalConfig.launcher.actions = v
         }
     }
 }
