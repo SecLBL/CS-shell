@@ -65,6 +65,8 @@ StyledWindow {
         panels.popouts.close();
     }
 
+    // Game mode replaces this fullscreen window with GameBar and GameLauncher (frees most shell VRAM)
+    visible: !GameMode.enabled
     name: "drawers"
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: (fsTransitionProg > 0 && contentItem.Config.general.showOverFullscreen) || (hasSpecialWorkspace && hasFullscreenOnNormalWs) ? WlrLayer.Overlay : WlrLayer.Top

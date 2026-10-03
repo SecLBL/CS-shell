@@ -22,5 +22,16 @@ Variants {
 
             screen: scope.modelData
         }
+
+        GameBar {
+            screen: scope.modelData
+            visible: GameMode.enabled
+            implicitWidth: content.bar.exclusiveZone
+        }
+
+        GameLauncher {
+            screen: scope.modelData
+            screenState: content.screenState
+        }
     }
 }
