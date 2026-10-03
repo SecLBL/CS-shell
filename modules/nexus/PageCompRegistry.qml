@@ -252,6 +252,9 @@ QtObject {
                 Component {
                     CsBarWorkspacesPage {}
                 }
+                Component {
+                    CsGameModePage {}
+                }
             }
         },
 

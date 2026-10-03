@@ -48,6 +48,24 @@ class UtilitiesVpn : public settings::ObjectNode {
     CONFIG_PROPERTY(QString, selectedProvider, {})
 };
 
+class UtilitiesGameMode : public settings::ObjectNode {
+    CONFIG_NODE(UtilitiesGameMode, settings::ObjectNode)
+
+    // Main monitor empty = focused monitor when game mode starts; otherMode: off, resolution or percent
+    CONFIG_PROPERTY(bool, hideBackground, true)
+    CONFIG_PROPERTY(bool, slimShell, true)
+    CONFIG_PROPERTY(bool, opaqueShell, true)
+    CONFIG_PROPERTY(bool, disableEffects, true)
+    CONFIG_PROPERTY(bool, compactLayout, true)
+    CONFIG_PROPERTY(bool, bypassNoiseReduction, true)
+    CONFIG_PROPERTY(QString, mainMonitor, {})
+    CONFIG_PROPERTY(QString, otherMode, u"off"_s)
+    CONFIG_PROPERTY(QString, otherResolution, {})
+    CONFIG_PROPERTY(int, otherRefreshRate, 0)
+    // Closest mode to this share of the native width
+    CONFIG_PROPERTY(int, otherScalePercent, 100)
+};
+
 class UtilitiesCards : public settings::ObjectNode {
     CONFIG_NODE(UtilitiesCards, settings::ObjectNode)
 
@@ -64,6 +82,7 @@ class UtilitiesConfig : public settings::ObjectNode {
     CONFIG_SUBOBJECT(UtilitiesCards, cards)
     CONFIG_GLOBAL_SUBOBJECT(UtilitiesToasts, toasts)
     CONFIG_GLOBAL_SUBOBJECT(UtilitiesVpn, vpn)
+    CONFIG_GLOBAL_SUBOBJECT(UtilitiesGameMode, gameMode)
     CONFIG_LIST(EntryList, quickToggles,
         DEFAULT_ARG({
             LIST_ENTRY(wifi, true),

@@ -10,7 +10,7 @@ import qs.services
 
 Variants {
     // Game mode drops the whole background window (frees VRAM and render time)
-    model: GameMode.enabled ? [] : Screens.screens.filter(s => GlobalConfig.forScreen(s.name).background.enabled)
+    model: GameMode.hideBackground ? [] : Screens.screens.filter(s => GlobalConfig.forScreen(s.name).background.enabled)
 
     StyledWindow {
         id: win

@@ -17,7 +17,7 @@ StyledWindow {
     required property ScreenState screenState
 
     name: "gamelauncher"
-    visible: GameMode.enabled && screenState.launcher && contentItem.Config.launcher.enabled
+    visible: GameMode.slimShell && screenState.launcher && contentItem.Config.launcher.enabled
     color: Colours.palette.m3surface
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand

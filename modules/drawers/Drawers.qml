@@ -25,7 +25,7 @@ Variants {
 
         GameBar {
             screen: scope.modelData
-            visible: GameMode.enabled
+            visible: GameMode.slimShell
             implicitWidth: content.bar.exclusiveZone
         }
 

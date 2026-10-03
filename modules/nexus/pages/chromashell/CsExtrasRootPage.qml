@@ -134,6 +134,13 @@ PageBase {
         }
 
         NavRow {
+            icon: "gamepad"
+            text: qsTr("Game mode")
+            subtext: qsTr("Monitors while gaming")
+            onClicked: root.nState.openSubPage(19)
+        }
+
+        NavRow {
             last: true
             icon: "folder"
             text: qsTr("Paths")
