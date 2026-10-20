@@ -17,10 +17,8 @@ Searcher {
                 workingDirectory: entry.workingDirectory
             });
         else
-            Quickshell.execDetached({
-                command: ["app2unit", "--", ...entry.command],
-                workingDirectory: entry.workingDirectory
-            });
+            // Desktop ID keeps the unit name matching the .desktop file (task managers, Path=, field codes)
+            Quickshell.execDetached(["app2unit", "--", `${entry.id}.desktop`]);
     }
 
     function search(search: string): var {
