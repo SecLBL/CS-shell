@@ -1,29 +1,42 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Caelestia.Config
 import qs.components
 import qs.services
 
-// Layout mode of this screen's active workspace: canvas (hypr/scripts/canvas, Super+A)
-// when floating windows are the majority, as in auto_layout_mode.py, otherwise tiling.
-// Click switches it, through canvas.toggle() (hypr config/canvas.lua) like Super+A.
+// Layout mode of this screen's active workspace: canvas or tiling, as stored per
+// workspace by hypr config/canvas.lua in $XDG_RUNTIME_DIR/canvas-modes.json.
+// Click switches it, through canvas.toggle() like Super+A.
 StyledRect {
     id: root
 
     required property ShellScreen screen
 
     readonly property int wsId: Hypr.monitorFor(screen)?.activeWorkspace?.id ?? 0
-    readonly property bool canvas: {
-        const wins = Hypr.toplevelsForWs(wsId).map(t => t.lastIpcObject);
-        const floating = wins.filter(o => o.floating).length;
-        return floating > 0 && floating * 2 > wins.length;
-    }
+    property var modes: ({})
+    readonly property bool canvas: modes[String(wsId)] === true
 
     implicitWidth: Tokens.sizes.bar.innerWidth
     implicitHeight: Tokens.sizes.bar.innerWidth
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.full
+
+    FileView {
+        path: `${Quickshell.env("XDG_RUNTIME_DIR")}/canvas-modes.json`
+        watchChanges: true
+        printErrors: false // missing until the first toggle
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                root.modes = JSON.parse(text());
+            } catch (e) {
+                root.modes = {};
+            }
+        }
+        onLoadFailed: root.modes = {}
+    }
 
     StateLayer {
         radius: root.radius
