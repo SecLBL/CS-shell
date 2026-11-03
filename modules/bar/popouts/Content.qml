@@ -37,6 +37,13 @@ Item {
         }
 
         Popout {
+            name: "wspreview"
+            sourceComponent: WorkspacePreview {
+                ws: root.popouts.previewWs
+            }
+        }
+
+        Popout {
             id: networkPopout
 
             name: "network"

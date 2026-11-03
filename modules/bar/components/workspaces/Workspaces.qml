@@ -55,6 +55,12 @@ StyledClippingRect {
 
     property real blur: onSpecial ? 1 : 0
 
+    // workspace under a point in this item's coordinates (same lookup as the click handler)
+    function workspaceAt(pos: point): Workspace {
+        const p = mapToItem(workspaces, pos.x, pos.y);
+        return workspaces.itemAt(p.x, p.y) as Workspace;
+    }
+
     function workspaceIndex(id: int): int {
         if (!Config.bar.workspaces.showUnoccupied)
             return wsIds.indexOf(id);

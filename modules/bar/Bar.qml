@@ -68,6 +68,19 @@ ColumnLayout {
                 popouts.hasCurrent = false;
                 tray.expanded = true;
             }
+        } else if (id === "workspaces") {
+            // ponytail: always on, add a Config.bar.popouts flag (C++ config) if it should be optional
+            const wsList = ch.item as Workspaces;
+            const ws = wsList.workspaceAt(mapToItem(wsList, width / 2, y));
+            if (ws?.isOccupied) {
+                popouts.previewWs = ws.ws;
+                popouts.currentName = "wspreview";
+                // workspace items size through LazyListView, their own height stays 0
+                popouts.currentCenter = Qt.binding(() => ws.mapToItem(root, 0, ws.childrenRect.height / 2).y);
+                popouts.hasCurrent = true;
+            } else {
+                popouts.hasCurrent = false;
+            }
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             popouts.currentName = id.toLowerCase();
             popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
@@ -117,6 +130,14 @@ ColumnLayout {
                 roleValue: "spacer"
                 delegate: EntryWrapper {
                     Layout.fillHeight: true
+                }
+            }
+            DelegateChoice {
+                roleValue: "canvasMode"
+                delegate: EntryWrapper {
+                    CanvasMode {
+                        screen: root.screen
+                    }
                 }
             }
             DelegateChoice {

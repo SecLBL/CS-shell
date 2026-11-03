@@ -35,6 +35,12 @@ Variants {
             component: win
         }
 
+        CanvasParallax {
+            id: parallax
+
+            screen: win.modelData
+        }
+
         Item {
             id: behindClock
 
@@ -49,6 +55,19 @@ Variants {
                 active: Config.background.wallpaperEnabled
 
                 sourceComponent: Wallpaper {}
+
+                transform: [
+                    Scale {
+                        origin.x: wallpaper.width / 2
+                        origin.y: wallpaper.height / 2
+                        xScale: parallax.zoom
+                        yScale: parallax.zoom
+                    },
+                    Translate {
+                        x: parallax.offsetX
+                        y: parallax.offsetY
+                    }
+                ]
             }
 
             Visualiser {
