@@ -46,6 +46,15 @@ class BackgroundVisualiser : public settings::ObjectNode {
     CONFIG_PROPERTY(qreal, spacing, 1)
 };
 
+// Wallpaper follows a canvas pan (modules/background/CanvasParallax.qml)
+class BackgroundParallax : public settings::ObjectNode {
+    CONFIG_NODE(BackgroundParallax, settings::ObjectNode)
+
+    CONFIG_PROPERTY(bool, enabled, true)
+    CONFIG_PROPERTY(qreal, zoom, 1.2)      // wallpaper scale, its overscan is the room to move
+    CONFIG_PROPERTY(qreal, strength, 0.15) // wallpaper px per canvas px
+};
+
 class BackgroundConfig : public settings::ObjectNode {
     CONFIG_NODE(BackgroundConfig, settings::ObjectNode)
 
@@ -53,6 +62,7 @@ class BackgroundConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, wallpaperEnabled, true)
     CONFIG_SUBOBJECT(DesktopClock, desktopClock)
     CONFIG_SUBOBJECT(BackgroundVisualiser, visualiser)
+    CONFIG_SUBOBJECT(BackgroundParallax, parallax)
 };
 
 } // namespace caelestia::config

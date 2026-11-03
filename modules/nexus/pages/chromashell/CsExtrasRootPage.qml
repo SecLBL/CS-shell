@@ -141,6 +141,13 @@ PageBase {
         }
 
         NavRow {
+            icon: "pan_tool"
+            text: qsTr("Canvas")
+            subtext: qsTr("Window layout, wallpaper parallax")
+            onClicked: root.nState.openSubPage(20)
+        }
+
+        NavRow {
             last: true
             icon: "folder"
             text: qsTr("Paths")

@@ -99,6 +99,14 @@ class GeneralBattery : public settings::ObjectNode {
     CONFIG_PROPERTY(int, criticalLevel, 3)
 };
 
+// Canvas workspaces (hypr config/canvas.lua); read by hypr/scripts/canvas too
+class GeneralCanvas : public settings::ObjectNode {
+    CONFIG_NODE(GeneralCanvas, settings::ObjectNode)
+
+    // new windows float on canvas workspaces (auto_layout_mode.py)
+    CONFIG_PROPERTY(bool, autoLayout, true)
+};
+
 class GeneralConfig : public settings::ObjectNode {
     CONFIG_NODE(GeneralConfig, settings::ObjectNode)
 
@@ -110,6 +118,7 @@ class GeneralConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_SUBOBJECT(GeneralApps, apps)
     CONFIG_GLOBAL_SUBOBJECT(GeneralIdle, idle)
     CONFIG_GLOBAL_SUBOBJECT(GeneralBattery, battery)
+    CONFIG_GLOBAL_SUBOBJECT(GeneralCanvas, canvas)
 };
 
 } // namespace caelestia::config

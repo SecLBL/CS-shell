@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import Caelestia.Config
 import qs.services
 
 // Wallpaper parallax for the canvas pan (hypr/scripts/canvas), as Iridium's
@@ -15,8 +16,10 @@ Item {
 
     required property ShellScreen screen
 
-    readonly property real zoom: 1.2
-    readonly property real strength: 0.15     // wallpaper px per canvas px
+    // background.parallax in the shell config (Nexus: ChromaShell Extras > Canvas)
+    readonly property bool enabled: Config.background.parallax.enabled
+    readonly property real zoom: enabled ? Math.max(1, Config.background.parallax.zoom) : 1
+    readonly property real strength: Config.background.parallax.strength // wallpaper px per canvas px
     readonly property real springW: 24        // spring stiffness, higher follows tighter
     readonly property real switchDuration: 0.65
 

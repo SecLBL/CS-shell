@@ -255,6 +255,9 @@ QtObject {
                 Component {
                     CsGameModePage {}
                 }
+                Component {
+                    CsCanvasPage {}
+                }
             }
         },
 
