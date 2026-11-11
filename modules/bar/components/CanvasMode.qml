@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Caelestia.Config
 import qs.components
@@ -13,7 +14,9 @@ StyledRect {
 
     required property ShellScreen screen
 
-    readonly property int wsId: Hypr.monitorFor(screen)?.activeWorkspace?.id ?? 0
+    readonly property HyprlandMonitor monitor: Hypr.monitorFor(screen)
+    // the workspace in front: an open special workspace (id 0 when none), else the active one
+    readonly property int wsId: monitor?.lastIpcObject?.specialWorkspace?.id || (monitor?.activeWorkspace?.id ?? 0)
     property var modes: ({})
     readonly property bool canvas: modes[String(wsId)] === true
 
@@ -41,8 +44,8 @@ StyledRect {
     StateLayer {
         radius: root.radius
         onClicked: {
-            if (Hypr.activeWsId !== root.wsId)
-                Hypr.focusWorkspace(root.wsId); // the toggle acts on the focused workspace
+            if (Hypr.focusedMonitor !== root.monitor)
+                Hypr.focusWorkspace(root.monitor.activeWorkspace.id); // the toggle acts on the focused monitor's front workspace
             Hypr.extras.message("eval if canvas then canvas.toggle() end");
         }
     }
