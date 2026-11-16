@@ -17,11 +17,14 @@ ColumnLayout {
     id: root
 
     required property FileSystemEntry entry
+    // The entry turns null for a moment when its file is deleted
+    readonly property string base: entry?.baseName ?? ""
+    readonly property string path: entry?.path ?? ""
     readonly property string thumbDir: `${Paths.cache}/capture-thumbs`
-    readonly property string thumbPath: `${thumbDir}/${entry.baseName}.jpg`
+    readonly property string thumbPath: `${thumbDir}/${root.base}.jpg`
     // [kind, date, app] from recording_<stamp>.ext / clip_<stamp>_<app>.ext
     readonly property var parts: {
-        const m = entry.baseName.match(/^(recording|clip)_(\d{4})(\d{2})(\d{2})_(\d{2})-(\d{2})-(\d{2})(?:_(.+))?/);
+        const m = root.base.match(/^(recording|clip)_(\d{4})(\d{2})(\d{2})_(\d{2})-(\d{2})-(\d{2})(?:_(.+))?/);
         if (!m)
             return ["", null, ""];
         return [m[1], new Date(m[2], m[3] - 1, m[4], m[5], m[6], m[7]), m[8] ?? ""];
@@ -35,7 +38,7 @@ ColumnLayout {
     Process {
         id: thumbProc
 
-        command: ["sh", "-c", `mkdir -p "$1" && ffmpeg -v error -y -ss 1 -i "$0" -frames:v 1 -vf scale=480:-2 "$1/$2.jpg"; ffprobe -v error -show_entries format=duration -of csv=p=0 "$0" > "$1/$2.dur"`, root.entry.path, root.thumbDir, root.entry.baseName]
+        command: ["sh", "-c", `mkdir -p "$1" && ffmpeg -v error -y -ss 1 -i "$0" -frames:v 1 -vf scale=480:-2 "$1/$2.jpg"; ffprobe -v error -show_entries format=duration -of csv=p=0 "$0" > "$1/$2.dur"`, root.path, root.thumbDir, root.base]
         onExited: { // qmllint disable signal-handler-parameters
             thumb.source = "";
             thumb.source = `file://${root.thumbPath}`;
@@ -46,7 +49,7 @@ ColumnLayout {
     FileView {
         id: durFile
 
-        path: `${root.thumbDir}/${root.entry.baseName}.dur`
+        path: `${root.thumbDir}/${root.base}.dur`
         printErrors: false
         onLoaded: root.duration = parseFloat(text()) || 0
     }
@@ -80,7 +83,7 @@ ColumnLayout {
             asynchronous: true
             cache: false
             onStatusChanged: {
-                if (status === Image.Error && !tried) {
+                if (status === Image.Error && !tried && root.base) {
                     tried = true;
                     thumbProc.running = true;
                 }
@@ -88,7 +91,7 @@ ColumnLayout {
         }
 
         StateLayer {
-            onClicked: Quickshell.execDetached([...GlobalConfig.general.apps.playback, root.entry.path])
+            onClicked: Quickshell.execDetached([...GlobalConfig.general.apps.playback, root.path])
         }
 
         StyledRect {
@@ -126,14 +129,14 @@ ColumnLayout {
             IconButton {
                 icon: "folder"
                 type: IconButton.Tonal
-                onClicked: Quickshell.execDetached([...GlobalConfig.general.apps.explorer, root.entry.path])
+                onClicked: Quickshell.execDetached([...GlobalConfig.general.apps.explorer, root.path])
             }
 
             // Copies the file itself, e.g. to paste it into a chat
             IconButton {
                 icon: "content_copy"
                 type: IconButton.Tonal
-                onClicked: Quickshell.execDetached(["sh", "-c", 'printf "%s\\n" "$0" | wl-copy --type text/uri-list', `file://${root.entry.path}`])
+                onClicked: Quickshell.execDetached(["sh", "-c", 'printf "%s\\n" "$0" | wl-copy --type text/uri-list', `file://${root.path}`])
             }
 
             // First click arms, second deletes
@@ -148,8 +151,8 @@ ColumnLayout {
                         disarm.restart();
                         return;
                     }
-                    CUtils.deleteFile(Qt.resolvedUrl(root.entry.path));
-                    Quickshell.execDetached(["rm", "-f", root.thumbPath, `${root.thumbDir}/${root.entry.baseName}.dur`]);
+                    CUtils.deleteFile(Qt.resolvedUrl(root.path));
+                    Quickshell.execDetached(["rm", "-f", root.thumbPath, `${root.thumbDir}/${root.base}.dur`]);
                 }
             }
         }
@@ -162,14 +165,14 @@ ColumnLayout {
 
         StyledText {
             Layout.fillWidth: true
-            text: root.parts[2] || (root.parts[0] === "clip" ? qsTr("Clip") : root.parts[0] === "recording" ? qsTr("Recording") : root.entry.name)
+            text: root.parts[2] || (root.parts[0] === "clip" ? qsTr("Clip") : root.parts[0] === "recording" ? qsTr("Recording") : (root.entry?.name ?? ""))
             font: Tokens.font.body.small
             elide: Text.ElideRight
         }
 
         StyledText {
             Layout.fillWidth: true
-            text: [root.parts[1] ? Qt.formatDateTime(root.parts[1], Qt.locale(), Locale.ShortFormat) : "", Replay.formatSize(root.entry.size)].filter(s => s).join(" · ")
+            text: [root.parts[1] ? Qt.formatDateTime(root.parts[1], Qt.locale(), Locale.ShortFormat) : "", Replay.formatSize(root.entry?.size ?? 0)].filter(s => s).join(" · ")
             color: Colours.palette.m3outline
             font: Tokens.font.label.small
             elide: Text.ElideRight
