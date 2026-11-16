@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Caelestia
@@ -12,8 +11,9 @@ import qs.components.controls
 import qs.services
 import qs.utils
 
-// Thumbnail tile for a recording or clip; click plays, hover shows file actions
-ColumnLayout {
+// Thumbnail tile for a recording or clip; click plays, hover shows file actions.
+// Width is set by the grid; everything else derives from it.
+Column {
     id: root
 
     required property FileSystemEntry entry
@@ -55,8 +55,8 @@ ColumnLayout {
     }
 
     StyledClippingRect {
-        Layout.fillWidth: true
-        Layout.preferredHeight: width * 9 / 16
+        width: root.width
+        height: Math.round(root.width * 9 / 16)
         radius: Tokens.rounding.medium
         color: Colours.tPalette.m3surfaceContainerHighest
 
@@ -158,20 +158,19 @@ ColumnLayout {
         }
     }
 
-    ColumnLayout {
-        Layout.fillWidth: true
-        Layout.leftMargin: Tokens.padding.extraSmall
-        spacing: 0
+    Column {
+        x: Tokens.padding.extraSmall
+        width: root.width - x
 
         StyledText {
-            Layout.fillWidth: true
+            width: parent.width
             text: root.parts[2] || (root.parts[0] === "clip" ? qsTr("Clip") : root.parts[0] === "recording" ? qsTr("Recording") : (root.entry?.name ?? ""))
             font: Tokens.font.body.small
             elide: Text.ElideRight
         }
 
         StyledText {
-            Layout.fillWidth: true
+            width: parent.width
             text: [root.parts[1] ? Qt.formatDateTime(root.parts[1], Qt.locale(), Locale.ShortFormat) : "", Replay.formatSize(root.entry?.size ?? 0)].filter(s => s).join(" · ")
             color: Colours.palette.m3outline
             font: Tokens.font.label.small

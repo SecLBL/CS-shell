@@ -5,36 +5,30 @@ import QtQuick.Layouts
 import Caelestia.Config
 import Caelestia.Models
 
-// Responsive grid of MediaTiles for a FileSystemModel; shows at most `limit` files
-GridLayout {
+// Grid of MediaTiles for a FileSystemModel; shows at most `limit` files.
+// Sizes only flow from the width down (no layouts inside), so it can't loop on polish.
+Flow {
     id: root
 
     required property FileSystemModel files
     property int limit: 1000
-    readonly property real tileWidth: (width - columnSpacing * (columns - 1)) / columns
+    readonly property int columns: Math.max(2, Math.floor(width / (Tokens.font.body.small.pointSize * 16)))
+    readonly property real tileWidth: Math.floor((width - spacing * (columns - 1)) / columns)
 
     Layout.fillWidth: true
-    columns: Math.max(2, Math.floor(width / (Tokens.font.body.small.pointSize * 16)))
-    columnSpacing: Tokens.spacing.medium
-    rowSpacing: Tokens.spacing.large
+    Layout.preferredWidth: 0 // don't let the content width feed back into the page layout
+    spacing: Tokens.spacing.medium
 
     Repeater {
         model: root.files
 
-        Loader {
-            id: tile
-
+        MediaTile {
             required property FileSystemEntry modelData
             required property int index
 
-            Layout.preferredWidth: root.tileWidth
-            Layout.alignment: Qt.AlignTop
-            active: index < root.limit
-            visible: active
-
-            sourceComponent: MediaTile {
-                entry: tile.modelData
-            }
+            entry: modelData
+            width: root.tileWidth
+            visible: index < root.limit
         }
     }
 }
