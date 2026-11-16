@@ -96,8 +96,10 @@ MouseArea {
             }
         }
 
+        // Only while open: the shadow doesn't pass the disabled state down, so a collapsed menu would eat clicks
         MouseArea {
             anchors.fill: parent
+            enabled: root.expanded
             hoverEnabled: true
             onWheel: e => e.accepted = true
         }
