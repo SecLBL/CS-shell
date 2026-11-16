@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Caelestia.Components
 import Caelestia.Config
 import Caelestia.I18n
@@ -15,7 +16,7 @@ StyledRect {
 
     required property var props
     required property ScreenState screenState
-    readonly property real nonAnimHeight: btnLayout.implicitHeight + listOrControls.implicitHeight + layout.spacing + layout.anchors.margins * 2
+    readonly property real nonAnimHeight: btnLayout.implicitHeight + replayLayout.implicitHeight + listOrControls.implicitHeight + layout.spacing * 2 + layout.anchors.margins * 2
 
     implicitHeight: layout.implicitHeight + layout.anchors.margins * 2
 
@@ -24,6 +25,10 @@ StyledRect {
 
     Ref {
         service: Recorder
+    }
+
+    Ref {
+        service: Replay
     }
 
     ColumnLayout {
@@ -112,6 +117,96 @@ StyledRect {
                         onClicked: Recorder.start(["-sr"])
                     }
                 ]
+            }
+        }
+
+        // Replay buffer: start when off; save (remembered length) and stop when running
+        RowLayout {
+            id: replayLayout
+
+            spacing: Tokens.spacing.medium
+
+            StyledRect {
+                implicitWidth: implicitHeight
+                implicitHeight: {
+                    const h = replayIcon.implicitHeight + Tokens.padding.small * 2;
+                    return h - (h % 2);
+                }
+
+                radius: Tokens.rounding.full
+                color: Replay.running ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+
+                MaterialIcon {
+                    id: replayIcon
+
+                    anchors.centerIn: parent
+                    text: "replay"
+                    color: Replay.running ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                    fontStyle: Tokens.font.icon.large
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 0
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: qsTr("Replay buffer")
+                    font: Tokens.font.body.medium
+                    elide: Text.ElideRight
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: Replay.running ? qsTr("%1 · %2 MB").arg(Replay.formatDuration(Replay.length)).arg(Math.round(Replay.rssMb)) : qsTr("Off")
+                    color: Colours.palette.m3onSurfaceVariant
+                    font: Tokens.font.body.small
+                    elide: Text.ElideRight
+                    animate: true
+                }
+            }
+
+            TextButton {
+                visible: !Replay.running
+                text: qsTr("Start")
+                type: TextButton.Tonal
+                onClicked: Replay.start()
+            }
+
+            SplitButton {
+                visible: Replay.running
+                type: SplitButton.Tonal
+
+                active: menuItems.find(m => m.value === root.props.replaySaveLength) ?? menuItems[0]
+                menu.onItemSelected: item => root.props.replaySaveLength = item.value
+
+                menuItems: saveItems.instances
+
+                Variants {
+                    id: saveItems
+
+                    model: [0, ...[10, 30, 60, 300].filter(s => s < Replay.length)]
+
+                    MenuItem {
+                        required property int modelData
+
+                        icon: "save"
+                        value: modelData
+                        text: modelData ? qsTr("Save last %1").arg(Replay.formatDuration(modelData)) : qsTr("Save everything")
+                        activeText: modelData ? Replay.formatDuration(modelData) : qsTr("Save")
+                        onClicked: Replay.save(modelData)
+                    }
+                }
+            }
+
+            IconButton {
+                visible: Replay.running
+                icon: "stop"
+                type: IconButton.Text
+                label.color: Colours.palette.m3error
+                stateLayer.color: Colours.palette.m3error
+                onClicked: Replay.stop()
             }
         }
 

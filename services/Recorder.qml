@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.utils
 
 Singleton {
     id: root
@@ -46,7 +47,8 @@ Singleton {
         id: checkProc
 
         running: true
-        command: ["pidof", "gpu-screen-recorder"]
+        // `caelestia record` keeps its pid in a file, so the replay buffer's recorder doesn't count
+        command: ["sh", "-c", "read -r p < \"$0\" && grep -qa gpu-screen-recorder /proc/$p/cmdline", `${Paths.state}/record/pid`]
         onExited: code => { // qmllint disable signal-handler-parameters
             const running = code === 0;
 

@@ -42,6 +42,12 @@ QtObject {
             description: Tr.tr("App volumes, sound devices"),
             category: "connectivity"
         },
+        {
+            label: qsTr("Recording & replay"),
+            icon: "replay",
+            description: qsTr("Replay buffer, screen recorder, clips"),
+            category: "media"
+        },
 
         // System
         {

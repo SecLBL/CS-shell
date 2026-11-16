@@ -36,11 +36,23 @@ ColumnLayout {
                 fontStyle: Tokens.font.icon.large
             }
 
-            StyledText {
-                Layout.alignment: Qt.AlignVCenter
+            // Recordings or replay clips
+            Repeater {
+                model: [["recordings", Tr.tr("Recordings")], ["clips", qsTr("Clips")]]
+
+                TextButton {
+                    required property var modelData
+                    readonly property bool current: (root.props.recordingListTab || "recordings") === modelData[0]
+
+                    Layout.alignment: Qt.AlignVCenter
+                    text: modelData[1]
+                    type: current ? TextButton.Tonal : TextButton.Text
+                    onClicked: root.props.recordingListTab = modelData[0]
+                }
+            }
+
+            Item {
                 Layout.fillWidth: true
-                text: Tr.tr("Recordings")
-                font: Tokens.font.body.medium
             }
 
             IconButton {
@@ -56,8 +68,10 @@ ColumnLayout {
         id: list
 
         model: FileSystemModel {
-            path: Paths.recsdir
-            nameFilters: ["recording_*.mp4"]
+            readonly property bool clips: root.props.recordingListTab === "clips"
+
+            path: clips ? Replay.clipsDir : Replay.recordingsDir
+            nameFilters: clips ? ["clip_*"] : ["recording_*"]
             sortReverse: true
         }
 
@@ -88,11 +102,14 @@ ColumnLayout {
                 Layout.rightMargin: Tokens.spacing.extraSmall
                 text: {
                     const time = recording.baseName;
-                    const matches = time.match(/^recording_(\d{4})(\d{2})(\d{2})_(\d{2})-(\d{2})-(\d{2})/);
+                    const matches = time.match(/^(recording|clip)_(\d{4})(\d{2})(\d{2})_(\d{2})-(\d{2})-(\d{2})(?:_(.+))?/);
                     if (!matches)
                         return time;
-                    const date = new Date(...matches.slice(1));
+                    const date = new Date(...matches.slice(2, 8));
                     date.setMonth(date.getMonth() - 1); // Woe (months start from 0)
+                    const when = Qt.formatDateTime(date, Qt.locale(), Locale.ShortFormat);
+                    if (matches[1] === "clip")
+                        return matches[8] ? qsTr("%1 · %2").arg(matches[8]).arg(when) : qsTr("Clip at %1").arg(when);
                     return Tr.tr("Recording at %1").arg(Qt.formatDateTime(date, Qt.locale()));
                 }
                 color: Colours.palette.m3onSurfaceVariant
@@ -219,7 +236,7 @@ ColumnLayout {
                     }
 
                     StyledText {
-                        text: Tr.tr("No recordings found")
+                        text: root.props.recordingListTab === "clips" ? qsTr("No clips found") : Tr.tr("No recordings found")
                         color: Colours.palette.m3outline
                     }
                 }

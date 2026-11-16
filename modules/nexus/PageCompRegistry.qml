@@ -11,6 +11,7 @@ import qs.modules.nexus.pages
 import qs.modules.nexus.pages.apps
 import qs.modules.nexus.pages.audio
 import qs.modules.nexus.pages.bluetooth
+import qs.modules.nexus.pages.capture
 import qs.modules.nexus.pages.network
 import qs.modules.nexus.pages.panels
 import qs.modules.nexus.pages.chromashell
@@ -102,6 +103,32 @@ QtObject {
                 }
                 Component {
                     ChatProcessingPage {}
+                }
+            }
+        },
+        Component {
+            // Recording & replay
+            StackPage {
+                Component {
+                    CapturePage {}
+                }
+                Component {
+                    LibraryPage {}
+                }
+                Component {
+                    ReplaySettingsPage {}
+                }
+                Component {
+                    RecordSettingsPage {}
+                }
+                Component {
+                    CaptureAudioPage {}
+                }
+                Component {
+                    AutomationPage {}
+                }
+                Component {
+                    CaptureGeneralPage {}
                 }
             }
         },
