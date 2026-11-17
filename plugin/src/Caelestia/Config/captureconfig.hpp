@@ -82,9 +82,10 @@ class CaptureCleanup : public settings::ObjectNode {
 class CaptureConfig : public settings::ObjectNode {
     CONFIG_NODE(CaptureConfig, settings::ObjectNode)
 
-    // Video codec from `caelestia replay codecs`, auto = recorder default
+    // gpu (NVENC/VA-API), vulkan (less VRAM, experimental) or cpu (H.264 only)
+    CONFIG_PROPERTY(QString, encoder, u"gpu"_s)
+    // Video codec from `caelestia replay codecs`, auto = recorder default (H.264 with Vulkan)
     CONFIG_PROPERTY(QString, codec, u"auto"_s)
-    CONFIG_PROPERTY(bool, vulkan, false)
     CONFIG_PROPERTY(QString, container, u"mkv"_s)
     CONFIG_PROPERTY(bool, cursor, true)
     CONFIG_PROPERTY(QString, framerateMode, u"vfr"_s)

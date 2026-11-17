@@ -217,7 +217,7 @@ PageBase {
             last: true
             icon: "settings"
             text: qsTr("General")
-            subtext: `${root.conf.codec === "auto" ? qsTr("Auto codec") : root.conf.codec} · ${root.conf.container.toUpperCase()}`
+            subtext: [({ gpu: qsTr("GPU"), vulkan: "Vulkan", cpu: qsTr("CPU") })[root.conf.encoder] ?? root.conf.encoder, root.conf.encoder === "cpu" ? "H.264" : root.conf.codec === "auto" ? qsTr("auto codec") : root.conf.codec, root.conf.container.toUpperCase()].join(" · ")
             onClicked: root.nState.openSubPage(6)
         }
     }

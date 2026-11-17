@@ -28,6 +28,10 @@ PageBase {
             vp9: "VP9"
         })
 
+    // Codec names usable with the chosen encoder (Vulkan ones without their suffix)
+    readonly property list<string> vulkanCodecs: codecs.filter(c => c.endsWith("_vulkan")).map(c => c.slice(0, -7))
+    readonly property list<string> encoderCodecs: conf.encoder === "vulkan" ? vulkanCodecs : codecs.filter(c => !c.endsWith("_vulkan") && !c.endsWith("_software"))
+
     title: qsTr("General")
     isSubPage: true
 
@@ -50,20 +54,26 @@ PageBase {
             text: qsTr("Encoding")
         }
 
-        OptionRow {
+        SegmentRow {
             first: true
-            label: qsTr("Video codec")
-            options: [["auto", qsTr("Automatic")], ...root.codecs.filter(c => !c.endsWith("_vulkan") && !c.endsWith("_software")).map(c => [c, root.codecNames[c] ?? c])]
-            current: root.conf.codec
-            onPicked: v => root.conf.codec = v
+            label: qsTr("Encoder")
+            subtext: root.conf.encoder === "vulkan" ? qsTr("Less VRAM · experimental") : root.conf.encoder === "cpu" ? qsTr("No VRAM · high CPU load · H.264 only") : ""
+            options: [["gpu", qsTr("GPU")], ...(root.vulkanCodecs.length ? [["vulkan", "Vulkan"]] : []), ...(root.codecs.includes("h264_software") ? [["cpu", qsTr("CPU")]] : [])]
+            current: root.conf.encoder
+            onPicked: v => {
+                root.conf.encoder = v;
+                // Keep the codec valid for the new encoder
+                if (!root.encoderCodecs.includes(root.conf.codec))
+                    root.conf.codec = "auto";
+            }
         }
 
-        ToggleRow {
-            visible: root.codecs.includes(`${root.conf.codec}_vulkan`)
-            text: qsTr("Encode via Vulkan")
-            subtext: qsTr("Experimental")
-            checked: root.conf.vulkan
-            onToggled: root.conf.vulkan = checked
+        OptionRow {
+            visible: root.conf.encoder !== "cpu"
+            label: qsTr("Video codec")
+            options: [["auto", qsTr("Automatic")], ...root.encoderCodecs.map(c => [c, root.codecNames[c] ?? c])]
+            current: root.conf.codec
+            onPicked: v => root.conf.codec = v
         }
 
         SegmentRow {

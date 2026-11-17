@@ -12,6 +12,7 @@ ConnectedRect {
     id: root
 
     property alias label: label.text
+    property string subtext
     property var options: []
     property var current
 
@@ -28,12 +29,26 @@ ConnectedRect {
         anchors.leftMargin: Tokens.padding.largeIncreased
         spacing: Tokens.spacing.medium
 
-        StyledText {
-            id: label
-
+        ColumnLayout {
             Layout.fillWidth: true
-            font: Tokens.font.body.small
-            elide: Text.ElideRight
+            spacing: 0
+
+            StyledText {
+                id: label
+
+                Layout.fillWidth: true
+                font: Tokens.font.body.small
+                elide: Text.ElideRight
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                visible: root.subtext
+                text: root.subtext
+                color: Colours.palette.m3outline
+                font: Tokens.font.label.small
+                elide: Text.ElideRight
+            }
         }
 
         Segmented {
